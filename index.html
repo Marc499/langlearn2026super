@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a5276">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Thai Lernen - Sprachlern-App</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    /* ==================== RESET & BASE ==================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --primary: #1a5276;
+      --primary-light: #2980b9;
+      --accent: #e67e22;
+      --accent-light: #f39c12;
+      --bg: #f4f6f7;
+      --card-bg: #ffffff;
+      --text: #2c3e50;
+      --text-light: #7f8c8d;
+      --border: #dce1e3;
+      --success: #27ae60;
+      --thai-color: #8e44ad;
+      --phonetic-color: #2980b9;
+      --shadow: 0 2px 8px rgba(0,0,0,0.1);
+      --radius: 12px;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Thai', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 2rem;
+    }
+
+    /* ==================== HEADER ==================== */
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      padding: 1.2rem 1rem 1rem;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .header .subtitle {
+      font-size: 0.8rem;
+      opacity: 0.85;
+      margin-top: 0.2rem;
+    }
+
+    #audio-info {
+      font-size: 0.7rem;
+      margin-top: 0.3rem;
+      opacity: 0.7;
+    }
+
+    #audio-info.warning {
+      color: #f1c40f;
+      opacity: 1;
+    }
+
+    /* ==================== TABS ==================== */
+    .tabs {
+      display: flex;
+      background: white;
+      border-bottom: 2px solid var(--border);
+      position: sticky;
+      top: 76px;
+      z-index: 99;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.75rem 0.5rem;
+      border: none;
+      background: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-light);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-panel {
+      display: none;
+      padding: 1rem;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* ==================== INPUT AREA ==================== */
+    .input-area {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+    }
+
+    .input-area label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--primary);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    #input-text {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #input-text:focus {
+      border-color: var(--primary-light);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .btn {
+      padding: 0.7rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .btn-primary:active {
+      background: var(--accent-light);
+      transform: scale(0.97);
+    }
+
+    .btn-secondary {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:active {
+      background: #bdc3c7;
+    }
+
+    /* ==================== EXAMPLES ==================== */
+    .examples {
+      margin-top: 0.75rem;
+    }
+
+    .examples-title {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-bottom: 0.4rem;
+    }
+
+    .example-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .example-btn {
+      padding: 0.35rem 0.7rem;
+      background: #eaf2f8;
+      border: 1px solid #d4e6f1;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      color: var(--primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .example-btn:active {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* ==================== RESULTS ==================== */
+    #results {
+      margin-top: 0.5rem;
+    }
+
+    .no-result {
+      text-align: center;
+      color: var(--text-light);
+      padding: 2rem 1rem;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .result-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--accent);
+    }
+
+    .match-badge {
+      display: inline-block;
+      padding: 0.15rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+    }
+
+    .match-badge.exact {
+      background: #d5f5e3;
+      color: #1e8449;
+    }
+
+    .match-badge.partial {
+      background: #fdebd0;
+      color: #af601a;
+    }
+
+    .match-badge.word-by-word,
+    .match-badge.word-by-word-partial {
+      background: #d6eaf8;
+      color: #21618c;
+    }
+
+    .result-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid #f0f0f0;
+      gap: 0.3rem;
+    }
+
+    .result-row:last-child {
+      border-bottom: none;
+    }
+
+    .result-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-light);
+      min-width: 100px;
+      flex-shrink: 0;
+    }
+
+    .result-value {
+      font-size: 1rem;
+      flex: 1;
+      word-break: break-word;
+    }
+
+    .thai-text {
+      font-size: 1.4rem;
+      color: var(--thai-color);
+      font-weight: 600;
+      line-height: 1.8;
+      letter-spacing: 2px;
+    }
+
+    .phonetic-text {
+      font-size: 1.05rem;
+      color: var(--phonetic-color);
+      font-style: italic;
+      font-weight: 500;
+    }
+
+    .word-by-word {
+      color: var(--success);
+      font-weight: 500;
+    }
+
+    .thai-row {
+      align-items: center;
+    }
+
+    /* ==================== AUDIO BUTTON ==================== */
+    .audio-btn {
+      background: var(--primary-light);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      margin-left: 0.3rem;
+    }
+
+    .audio-btn:active {
+      transform: scale(0.9);
+    }
+
+    .audio-btn.playing {
+      background: var(--accent);
+      animation: pulse 0.8s infinite;
+    }
+
+    .audio-btn.small {
+      width: 30px;
+      height: 30px;
+      background: var(--phonetic-color);
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    /* ==================== BROWSE TAB ==================== */
+    .browse-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    #category-filter {
+      flex: 1;
+      padding: 0.6rem 0.8rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: white;
+      font-family: inherit;
+    }
+
+    #search-info {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      white-space: nowrap;
+    }
+
+    .category-section h3 {
+      font-size: 0.95rem;
+      color: var(--primary);
+      padding: 0.6rem 0 0.3rem;
+      border-bottom: 2px solid var(--accent);
+      margin-bottom: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .browse-item {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 0.4rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      cursor: pointer;
+      transition: all 0.15s;
+      border-left: 3px solid transparent;
+    }
+
+    .browse-item:active {
+      background: #f0f4f7;
+    }
+
+    .browse-item.expanded {
+      border-left-color: var(--accent);
+    }
+
+    .browse-de {
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-transform: capitalize;
+    }
+
+    .browse-details {
+      margin-top: 0.6rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .browse-details .result-row {
+      padding: 0.3rem 0;
+    }
+
+    .browse-details .thai-text {
+      font-size: 1.2rem;
+    }
+
+    /* ==================== INFO TAB ==================== */
+    .info-section {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      box-shadow: var(--shadow);
+    }
+
+    .info-section h3 {
+      color: var(--primary);
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 0.3rem;
+    }
+
+    .info-section p,
+    .info-section li {
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    .info-section ul {
+      padding-left: 1.2rem;
+    }
+
+    .info-section li {
+      margin-bottom: 0.3rem;
+    }
+
+    .tone-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .tone-table th,
+    .tone-table td {
+      padding: 0.5rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .tone-table th {
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+    }
+
+    .tone-table tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+
+    .tone-example {
+      font-size: 1.1rem;
+      color: var(--thai-color);
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (min-width: 600px) {
+      .tab-panel {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <h1>Thai Lernen</h1>
+    <div class="subtitle">Deutsch / Englisch &rarr; Thai mit Phonetik &amp; Audio</div>
+    <div id="audio-info">Audio: Web Speech API (Thai TH)</div>
+  </header>
+
+  <!-- TABS -->
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="translate-tab">Übersetzen</button>
+    <button class="tab-btn" data-tab="browse-tab">Wortliste</button>
+    <button class="tab-btn" data-tab="info-tab">Info</button>
+  </nav>
+
+  <!-- TAB: TRANSLATE -->
+  <section id="translate-tab" class="tab-panel active">
+    <div class="input-area">
+      <label for="input-text">Satz eingeben (Deutsch oder Englisch):</label>
+      <input type="text" id="input-text" placeholder="z.B. Wie geht es Ihnen" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="btn-group">
+        <button class="btn btn-primary" id="translate-btn">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
+          Übersetzen
+        </button>
+        <button class="btn btn-secondary" id="clear-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+
+      <div class="examples">
+        <div class="examples-title">Schnelle Beispiele:</div>
+        <div class="example-btns">
+          <button class="example-btn" data-text="Hallo">Hallo</button>
+          <button class="example-btn" data-text="Danke">Danke</button>
+          <button class="example-btn" data-text="Wie geht es Ihnen">Wie geht es Ihnen</button>
+          <button class="example-btn" data-text="Ich möchte essen">Ich möchte essen</button>
+          <button class="example-btn" data-text="Wie viel kostet das">Wie viel kostet das</button>
+          <button class="example-btn" data-text="Ich liebe dich">Ich liebe dich</button>
+          <button class="example-btn" data-text="I am learning Thai">I am learning Thai</button>
+          <button class="example-btn" data-text="Hilfe">Hilfe</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="results">
+      <div class="no-result">Geben Sie einen deutschen oder englischen Satz ein und drücken Sie "Übersetzen".</div>
+    </div>
+  </section>
+
+  <!-- TAB: BROWSE -->
+  <section id="browse-tab" class="tab-panel">
+    <div class="browse-header">
+      <select id="category-filter">
+        <option value="all">Alle Kategorien</option>
+      </select>
+      <span id="search-info"></span>
+    </div>
+    <div id="browse-list"></div>
+  </section>
+
+  <!-- TAB: INFO -->
+  <section id="info-tab" class="tab-panel">
+    <div class="info-section">
+      <h3>Über diese App</h3>
+      <p>Diese App hilft beim Lernen der thailändischen Sprache. Geben Sie deutsche oder englische Sätze ein und erhalten Sie:</p>
+      <ul>
+        <li><strong>Thai-Schrift</strong> - Die Übersetzung in thailändischen Buchstaben</li>
+        <li><strong>Phonetik</strong> - Aussprache-Hilfe in lateinischen Buchstaben</li>
+        <li><strong>Wort-für-Wort</strong> - Deutsche Rückübersetzung jedes einzelnen Wortes</li>
+        <li><strong>Audio</strong> - Hören Sie die thailändische Aussprache</li>
+      </ul>
+    </div>
+
+    <div class="info-section">
+      <h3>Thai Töne (Tones)</h3>
+      <p>Thai ist eine Tonsprache mit 5 Tönen. Der gleiche Laut kann mit verschiedenen Tönen verschiedene Bedeutungen haben:</p>
+      <table class="tone-table">
+        <thead>
+          <tr><th>Ton</th><th>Zeichen</th><th>Beispiel</th><th>Bedeutung</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Mittel</td><td>aa</td><td><span class="tone-example">กา</span> gaa</td><td>Krähe</td></tr>
+          <tr><td>Tief</td><td>àa</td><td><span class="tone-example">ก่า</span> gàa</td><td>(Partikel)</td></tr>
+          <tr><td>Fallend</td><td>âa</td><td><span class="tone-example">ข้า</span> khâa</td><td>Diener</td></tr>
+          <tr><td>Hoch</td><td>áa</td><td><span class="tone-example">ค้า</span> kháa</td><td>Handel</td></tr>
+          <tr><td>Steigend</td><td>ǎa</td><td><span class="tone-example">ฆ่า</span> khǎa</td><td>töten</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-section">
+      <h3>Phonetik-Legende</h3>
+      <ul>
+        <li><strong>ph</strong> - aspiriertes P (wie im Deutschen "Post")</li>
+        <li><strong>th</strong> - aspiriertes T (wie im Deutschen "Tor")</li>
+        <li><strong>kh</strong> - aspiriertes K (wie im Deutschen "Kind")</li>
+        <li><strong>bp</strong> - unaspiriertes P (zwischen B und P)</li>
+        <li><strong>dt</strong> - unaspiriertes T (zwischen D und T)</li>
+        <li><strong>ng</strong> - wie in "singen" (auch am Wortanfang!)</li>
+        <li><strong>ʉ</strong> - gerundetes Ü-ähnliches U</li>
+        <li><strong>ɔ</strong> - offenes O (wie in "Sonne")</li>
+        <li><strong>ɛ</strong> - offenes E (wie in "Bett")</li>
+      </ul>
+    </div>
+
+    <div class="info-section">
+      <h3>Audio-Hinweise</h3>
+      <p>Die Audio-Ausgabe nutzt die Web Speech API Ihres Android-Gerätes. Für die beste Erfahrung:</p>
+      <ul>
+        <li>Installieren Sie die "Google Text-to-Speech" App (meist vorinstalliert)</li>
+        <li>Laden Sie in den Android-Einstellungen unter "Sprachen" das Thai-Sprachpaket herunter</li>
+        <li>Der große Lautsprecher-Button spielt Thai-Audio ab</li>
+        <li>Der kleine Button liest die Phonetik auf Englisch vor</li>
+      </ul>
+    </div>
+
+    <div class="info-section">
+      <h3>Tipps</h3>
+      <ul>
+        <li>Tippen Sie auf einen Eintrag in der Wortliste, um Details zu sehen</li>
+        <li>Nutzen Sie die Schnell-Beispiele für häufige Sätze</li>
+        <li>Die App funktioniert auch offline!</li>
+        <li>Thai-Höflichkeitspartikel: Männer sagen <strong>ครับ</strong> (khráp), Frauen sagen <strong>ค่ะ</strong> (khà) am Satzende</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SCRIPTS -->
+  <script src="data/dictionary.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

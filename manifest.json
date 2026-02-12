@@ -1,0 +1,23 @@
+{
+  "name": "Thai Lernen - Sprachlern-App",
+  "short_name": "Thai Lernen",
+  "description": "Deutsch/Englisch zu Thai mit Phonetik, Wort-für-Wort Übersetzung und Audio",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6f7",
+  "theme_color": "#1a5276",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
