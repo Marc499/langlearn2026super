@@ -503,21 +503,238 @@
         margin: 0 auto;
       }
     }
+
+    /* ==================== LOGIN OVERLAY ==================== */
+    #login-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(160deg, var(--primary), var(--primary-light));
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .login-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+
+    .login-card h2 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 0.3rem;
+    }
+
+    .login-card .login-sub {
+      text-align: center;
+      color: var(--text-light);
+      font-size: 0.85rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .login-card label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-light);
+      margin: 0.7rem 0 0.25rem;
+    }
+
+    .login-card input {
+      width: 100%;
+      padding: 0.7rem 0.9rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .login-card input:focus {
+      border-color: var(--primary-light);
+    }
+
+    .login-card .btn {
+      width: 100%;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+
+    .login-error {
+      color: #c0392b;
+      font-size: 0.85rem;
+      margin-top: 0.6rem;
+      text-align: center;
+      min-height: 1.2em;
+    }
+
+    .login-success {
+      color: var(--success);
+    }
+
+    .login-links {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+
+    .login-links a {
+      font-size: 0.8rem;
+      color: var(--primary-light);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .login-view { display: none; }
+    .login-view.active { display: block; }
+
+    /* ==================== USER BAR ==================== */
+    .user-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-top: 0.4rem;
+      font-size: 0.8rem;
+    }
+
+    .user-chip {
+      background: rgba(255,255,255,0.2);
+      padding: 0.15rem 0.7rem;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .logout-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      border-radius: 12px;
+      padding: 0.15rem 0.7rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    /* ==================== MY WORDS TAB ==================== */
+    .myword-form input {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      margin-bottom: 0.5rem;
+      outline: none;
+    }
+
+    .myword-form input:focus {
+      border-color: var(--primary-light);
+    }
+
+    .myword-form label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-light);
+      margin-bottom: 0.2rem;
+    }
+
+    .myword-item {
+      position: relative;
+    }
+
+    .delete-word-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: #fdecea;
+      color: #c0392b;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 1rem;
+      cursor: pointer;
+      line-height: 1;
+    }
   </style>
 </head>
 <body>
+
+  <!-- LOGIN OVERLAY -->
+  <div id="login-overlay">
+    <div class="login-card">
+      <h2>Thai Lernen</h2>
+      <div class="login-sub">Bitte anmelden</div>
+
+      <!-- VIEW: LOGIN -->
+      <div id="view-login" class="login-view active">
+        <label for="login-user">Benutzername</label>
+        <input type="text" id="login-user" autocomplete="username" autocapitalize="off">
+        <label for="login-pass">Passwort</label>
+        <input type="password" id="login-pass" autocomplete="current-password">
+        <button class="btn btn-primary" id="login-btn">Anmelden</button>
+        <div class="login-error" id="login-error"></div>
+        <div class="login-links">
+          <a id="show-register">Neuer Benutzer</a>
+          <a id="show-reset">Passwort vergessen?</a>
+        </div>
+      </div>
+
+      <!-- VIEW: REGISTER -->
+      <div id="view-register" class="login-view">
+        <label for="reg-user">Neuer Benutzername</label>
+        <input type="text" id="reg-user" autocapitalize="off">
+        <label for="reg-pass">Passwort (min. 4 Zeichen)</label>
+        <input type="password" id="reg-pass">
+        <label for="reg-pass2">Passwort wiederholen</label>
+        <input type="password" id="reg-pass2">
+        <button class="btn btn-primary" id="register-btn">Registrieren</button>
+        <div class="login-error" id="register-error"></div>
+        <div class="login-links">
+          <a id="back-to-login-1">Zurück zur Anmeldung</a>
+        </div>
+      </div>
+
+      <!-- VIEW: RESET -->
+      <div id="view-reset" class="login-view">
+        <label for="reset-user">Benutzername</label>
+        <input type="text" id="reset-user" autocapitalize="off">
+        <label for="reset-master">Masterpasswort</label>
+        <input type="password" id="reset-master">
+        <label for="reset-new">Neues Passwort (min. 4 Zeichen)</label>
+        <input type="password" id="reset-new">
+        <button class="btn btn-primary" id="reset-btn">Passwort zurücksetzen</button>
+        <div class="login-error" id="reset-error"></div>
+        <div class="login-links">
+          <a id="back-to-login-2">Zurück zur Anmeldung</a>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- HEADER -->
   <header class="header">
     <h1>Thai Lernen</h1>
     <div class="subtitle">Deutsch / Englisch &rarr; Thai mit Phonetik &amp; Audio</div>
     <div id="audio-info">Audio: Web Speech API (Thai TH)</div>
+    <div class="user-bar">
+      <span class="user-chip" id="user-chip"></span>
+      <button class="logout-btn" id="logout-btn">Abmelden</button>
+    </div>
   </header>
 
   <!-- TABS -->
   <nav class="tabs">
     <button class="tab-btn active" data-tab="translate-tab">Übersetzen</button>
     <button class="tab-btn" data-tab="browse-tab">Wortliste</button>
+    <button class="tab-btn" data-tab="mywords-tab">Meine Wörter</button>
     <button class="tab-btn" data-tab="info-tab">Info</button>
   </nav>
 
@@ -565,6 +782,26 @@
       <span id="search-info"></span>
     </div>
     <div id="browse-list"></div>
+  </section>
+
+  <!-- TAB: MY WORDS -->
+  <section id="mywords-tab" class="tab-panel">
+    <div class="input-area myword-form">
+      <label style="font-size:0.9rem; color: var(--primary); margin-bottom: 0.6rem;">Eigenen Eintrag hinzufügen:</label>
+      <label for="mw-de">Deutsch</label>
+      <input type="text" id="mw-de" placeholder="z.B. ich mag mango" autocapitalize="off">
+      <label for="mw-en">Englisch (optional)</label>
+      <input type="text" id="mw-en" placeholder="z.B. i like mango" autocapitalize="off">
+      <label for="mw-th">Thai (Wörter mit Leerzeichen trennen)</label>
+      <input type="text" id="mw-th" placeholder="z.B. ฉัน ชอบ มะม่วง">
+      <label for="mw-ph">Phonetik</label>
+      <input type="text" id="mw-ph" placeholder="z.B. chǎn chɔ̂ɔp má-mûang" autocapitalize="off">
+      <label for="mw-ww">Wort-für-Wort Deutsch</label>
+      <input type="text" id="mw-ww" placeholder="z.B. Ich mögen Mango" autocapitalize="off">
+      <button class="btn btn-primary" id="add-word-btn" style="width:100%; justify-content:center; margin-top:0.5rem;">Hinzufügen</button>
+      <div class="login-error" id="mw-error"></div>
+    </div>
+    <div id="mywords-list"></div>
   </section>
 
   <!-- TAB: INFO -->
@@ -636,6 +873,7 @@
 
   <!-- SCRIPTS -->
   <script src="data/dictionary.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
