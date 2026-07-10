@@ -125,9 +125,10 @@
   // ==================== TRANSLATION SEARCH ====================
 
   function normalizeInput(text) {
-    return text.toLowerCase().trim()
+    return text.toLowerCase()
       .replace(/[?.!,;:'"]/g, '')
-      .replace(/\s+/g, ' ');
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   function allPhrases() {
