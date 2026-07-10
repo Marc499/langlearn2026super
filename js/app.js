@@ -21,6 +21,91 @@
   let currentUtterance = null;
   let speechSupported = 'speechSynthesis' in window;
 
+  // ==================== LOGIN / AUTH ====================
+
+  const loginOverlay = document.getElementById('login-overlay');
+  const userChip = document.getElementById('user-chip');
+
+  function showLoginView(id) {
+    document.querySelectorAll('.login-view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.login-error').forEach(e => { e.textContent = ''; e.classList.remove('login-success'); });
+  }
+
+  function enterApp() {
+    loginOverlay.style.display = 'none';
+    userChip.textContent = AUTH.currentUser();
+    renderBrowseList(categoryFilter.value || 'all');
+    renderMyWords();
+  }
+
+  document.getElementById('login-btn').addEventListener('click', async () => {
+    const user = document.getElementById('login-user').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    const res = await AUTH.login(user, pass);
+    if (res.ok) {
+      enterApp();
+    } else {
+      document.getElementById('login-error').textContent = res.error;
+    }
+  });
+
+  document.getElementById('login-pass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('login-btn').click();
+  });
+
+  document.getElementById('register-btn').addEventListener('click', async () => {
+    const user = document.getElementById('reg-user').value.trim();
+    const pass = document.getElementById('reg-pass').value;
+    const pass2 = document.getElementById('reg-pass2').value;
+    const errEl = document.getElementById('register-error');
+    if (pass !== pass2) {
+      errEl.textContent = 'Passwörter stimmen nicht überein.';
+      return;
+    }
+    const res = await AUTH.register(user, pass);
+    if (res.ok) {
+      errEl.classList.add('login-success');
+      errEl.textContent = 'Benutzer angelegt! Bitte anmelden.';
+      setTimeout(() => {
+        showLoginView('view-login');
+        document.getElementById('login-user').value = user;
+      }, 1200);
+    } else {
+      errEl.textContent = res.error;
+    }
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', async () => {
+    const user = document.getElementById('reset-user').value.trim();
+    const master = document.getElementById('reset-master').value;
+    const newPass = document.getElementById('reset-new').value;
+    const errEl = document.getElementById('reset-error');
+    const res = await AUTH.resetPassword(user, master, newPass);
+    if (res.ok) {
+      errEl.classList.add('login-success');
+      errEl.textContent = 'Passwort zurückgesetzt! Bitte anmelden.';
+      setTimeout(() => {
+        showLoginView('view-login');
+        document.getElementById('login-user').value = user;
+      }, 1200);
+    } else {
+      errEl.textContent = res.error;
+    }
+  });
+
+  document.getElementById('show-register').addEventListener('click', () => showLoginView('view-register'));
+  document.getElementById('show-reset').addEventListener('click', () => showLoginView('view-reset'));
+  document.getElementById('back-to-login-1').addEventListener('click', () => showLoginView('view-login'));
+  document.getElementById('back-to-login-2').addEventListener('click', () => showLoginView('view-login'));
+
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    AUTH.logout();
+    document.getElementById('login-pass').value = '';
+    loginOverlay.style.display = 'flex';
+    showLoginView('view-login');
+  });
+
   // ==================== TABS ====================
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -40,12 +125,20 @@
       .replace(/\s+/g, ' ');
   }
 
+  function allPhrases() {
+    const user = AUTH.currentUser();
+    const userWords = user ? AUTH.getUserWords(user).map(w => ({ ...w, custom: true })) : [];
+    // User's own words first so they win on equal matches
+    return userWords.concat(DICTIONARY.phrases);
+  }
+
   function searchPhrases(query) {
     const normalized = normalizeInput(query);
     const results = [];
+    const phrases = allPhrases();
 
     // 1. Exact match on de or en
-    for (const phrase of DICTIONARY.phrases) {
+    for (const phrase of phrases) {
       const de = normalizeInput(phrase.de);
       const en = normalizeInput(phrase.en);
       if (de === normalized || en === normalized) {
@@ -56,7 +149,7 @@
     if (results.length > 0) return results;
 
     // 2. Phrase contains query or query contains phrase
-    for (const phrase of DICTIONARY.phrases) {
+    for (const phrase of phrases) {
       const de = normalizeInput(phrase.de);
       const en = normalizeInput(phrase.en);
       if (de.includes(normalized) || en.includes(normalized) ||
@@ -139,10 +232,11 @@
   function renderResults(results) {
     let html = '';
     for (const r of results) {
-      const matchLabel = r.matchType === 'exact' ? 'Exakter Treffer' :
+      let matchLabel = r.matchType === 'exact' ? 'Exakter Treffer' :
         r.matchType === 'partial' ? 'Ähnlicher Treffer' :
         r.matchType === 'word-by-word' ? 'Wort-für-Wort' :
         'Teilweise Wort-für-Wort';
+      if (r.custom) matchLabel += ' · Eigenes Wort';
 
       html += `
         <div class="result-card">
@@ -377,6 +471,92 @@
     });
   });
 
+  // ==================== MY WORDS / EIGENE WÖRTER ====================
+
+  const myWordsList = document.getElementById('mywords-list');
+
+  function renderMyWords() {
+    const user = AUTH.currentUser();
+    if (!user) return;
+    const words = AUTH.getUserWords(user);
+
+    if (words.length === 0) {
+      myWordsList.innerHTML = '<div class="no-result">Noch keine eigenen Wörter.<br><small>Fügen Sie oben Ihren ersten Eintrag hinzu.</small></div>';
+      return;
+    }
+
+    let html = '';
+    words.forEach((w, i) => {
+      html += `
+        <div class="result-card myword-item">
+          <button class="delete-word-btn" onclick="deleteMyWord(${i})" title="Löschen" aria-label="Eintrag löschen">&times;</button>
+          <div class="result-row">
+            <span class="result-label">Deutsch:</span>
+            <span class="result-value">${escapeHtml(w.de)}</span>
+          </div>
+          ${w.en && w.en !== w.de ? `
+          <div class="result-row">
+            <span class="result-label">Englisch:</span>
+            <span class="result-value">${escapeHtml(w.en)}</span>
+          </div>` : ''}
+          <div class="result-row thai-row">
+            <span class="result-label">Thai:</span>
+            <span class="result-value thai-text">${escapeHtml(w.th)}</span>
+            <button class="audio-btn" onclick="playAudio('${escapeAttr(w.th)}')" title="Anhören" aria-label="Thai Audio abspielen">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+            </button>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Phonetik:</span>
+            <span class="result-value phonetic-text">${escapeHtml(w.phonetic)}</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Wort-für-Wort:</span>
+            <span class="result-value word-by-word">${escapeHtml(w.wordByWord)}</span>
+          </div>
+        </div>
+      `;
+    });
+    myWordsList.innerHTML = html;
+  }
+
+  window.deleteMyWord = function (index) {
+    const user = AUTH.currentUser();
+    if (!user) return;
+    AUTH.deleteUserWord(user, index);
+    renderMyWords();
+  };
+
+  document.getElementById('add-word-btn').addEventListener('click', () => {
+    const user = AUTH.currentUser();
+    if (!user) return;
+    const de = document.getElementById('mw-de').value.trim();
+    const en = document.getElementById('mw-en').value.trim();
+    const th = document.getElementById('mw-th').value.trim();
+    const ph = document.getElementById('mw-ph').value.trim();
+    const ww = document.getElementById('mw-ww').value.trim();
+    const errEl = document.getElementById('mw-error');
+
+    if (!de || !th) {
+      errEl.textContent = 'Deutsch und Thai sind Pflichtfelder.';
+      return;
+    }
+    errEl.textContent = '';
+
+    AUTH.addUserWord(user, {
+      de: de,
+      en: en || de,
+      th: th,
+      phonetic: ph || '-',
+      wordByWord: ww || de
+    });
+
+    ['mw-de', 'mw-en', 'mw-th', 'mw-ph', 'mw-ww'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    renderMyWords();
+  });
+
   // ==================== HELPERS ====================
 
   function escapeHtml(text) {
@@ -391,7 +571,12 @@
 
   // ==================== INIT ====================
 
-  renderBrowseList('all');
+  if (AUTH.currentUser()) {
+    enterApp();
+  } else {
+    loginOverlay.style.display = 'flex';
+    renderBrowseList('all');
+  }
 
   // Show audio support info
   if (!speechSupported) {
