@@ -42,11 +42,16 @@
   document.getElementById('login-btn').addEventListener('click', async () => {
     const user = document.getElementById('login-user').value.trim();
     const pass = document.getElementById('login-pass').value;
-    const res = await AUTH.login(user, pass);
-    if (res.ok) {
-      enterApp();
-    } else {
-      document.getElementById('login-error').textContent = res.error;
+    const errEl = document.getElementById('login-error');
+    try {
+      const res = await AUTH.login(user, pass);
+      if (res.ok) {
+        enterApp();
+      } else {
+        errEl.textContent = res.error;
+      }
+    } catch (e) {
+      errEl.textContent = 'Technischer Fehler: ' + e.message;
     }
   });
 
