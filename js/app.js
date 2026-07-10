@@ -435,6 +435,83 @@
     }
   }
 
+  // ==================== SUBSTRING SEARCH (all entries) ====================
+
+  const browseSearchInput = document.getElementById('browse-search');
+
+  // Fold diacritics so "suai" also matches "sǔai"
+  function fold(text) {
+    return (text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+
+  function runBrowseSearch() {
+    const query = fold(browseSearchInput.value.trim());
+    if (!query) {
+      renderBrowseList(categoryFilter.value || 'all');
+      return;
+    }
+
+    const matches = allPhrases().filter(p =>
+      [p.de, p.en, p.th, p.phonetic, p.wordByWord].some(f => fold(f).includes(query))
+    );
+
+    searchInfo.textContent = matches.length + ' Treffer';
+
+    if (matches.length === 0) {
+      browseContainer.innerHTML = '<div class="no-result">Keine Einträge gefunden für "' + escapeHtml(browseSearchInput.value.trim()) + '".</div>';
+      return;
+    }
+
+    let html = '';
+    for (const p of matches) {
+      html += `
+        <div class="result-card">
+          ${p.custom ? '<div class="match-badge word-by-word">Eigenes Wort</div>' : ''}
+          <div class="result-row">
+            <span class="result-label">Deutsch:</span>
+            <span class="result-value">${escapeHtml(p.de)}</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Englisch:</span>
+            <span class="result-value">${escapeHtml(p.en)}</span>
+          </div>
+          <div class="result-row thai-row">
+            <span class="result-label">Thai:</span>
+            <span class="result-value thai-text">${escapeHtml(p.th)}</span>
+            <button class="audio-btn" onclick="playAudio('${escapeAttr(p.th)}')" title="Anhören" aria-label="Thai Audio abspielen">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+            </button>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Phonetik:</span>
+            <span class="result-value phonetic-text">${escapeHtml(p.phonetic)}</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Wort-für-Wort:</span>
+            <span class="result-value word-by-word">${escapeHtml(p.wordByWord)}</span>
+          </div>
+        </div>
+      `;
+    }
+    browseContainer.innerHTML = html;
+  }
+
+  document.getElementById('browse-search-btn').addEventListener('click', runBrowseSearch);
+
+  browseSearchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      runBrowseSearch();
+    }
+  });
+
+  // Restore category list when the search field is cleared
+  browseSearchInput.addEventListener('input', () => {
+    if (browseSearchInput.value.trim() === '') {
+      renderBrowseList(categoryFilter.value || 'all');
+    }
+  });
+
   window.browseTap = function (el) {
     const details = el.querySelector('.browse-details');
     if (details) {
