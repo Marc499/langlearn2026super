@@ -1148,6 +1148,20 @@ const DICTIONARY = {
       wordByWord: "schön"
     },
     {
+      de: "es ist so schön",
+      en: "it is so beautiful",
+      th: "สวย มาก",
+      phonetic: "sǔai mâak",
+      wordByWord: "schön sehr"
+    },
+    {
+      de: "es ist wunderschön",
+      en: "it is gorgeous",
+      th: "สวย จัง เลย",
+      phonetic: "sǔai jang ləəi",
+      wordByWord: "schön so-sehr Betonung"
+    },
+    {
       de: "thailand ist schön",
       en: "thailand is beautiful",
       th: "ประเทศ ไทย สวย",
@@ -1299,6 +1313,27 @@ const DICTIONARY = {
     "slow": { th: "ช้า", phonetic: "cháa", de: "langsam" },
 
     // Misc
+    "es": { th: "มัน", phonetic: "man", de: "es" },
+    "it": { th: "มัน", phonetic: "man", de: "es" },
+    "ist": { th: "เป็น", phonetic: "bpen", de: "ist" },
+    "so": { th: "จัง", phonetic: "jang", de: "so(sehr)" },
+    "sehr": { th: "มาก", phonetic: "mâak", de: "sehr" },
+    "very": { th: "มาก", phonetic: "mâak", de: "sehr" },
+    "viel": { th: "มาก", phonetic: "mâak", de: "viel" },
+    "much": { th: "มาก", phonetic: "mâak", de: "viel" },
+    "auch": { th: "ด้วย", phonetic: "dûai", de: "auch" },
+    "also": { th: "ด้วย", phonetic: "dûai", de: "auch" },
+    "aber": { th: "แต่", phonetic: "dtɛ̀ɛ", de: "aber" },
+    "but": { th: "แต่", phonetic: "dtɛ̀ɛ", de: "aber" },
+    "heiß": { th: "ร้อน", phonetic: "rɔ́ɔn", de: "heiß" },
+    "hot": { th: "ร้อน", phonetic: "rɔ́ɔn", de: "heiß" },
+    "kalt": { th: "หนาว", phonetic: "nǎao", de: "kalt" },
+    "cold": { th: "หนาว", phonetic: "nǎao", de: "kalt" },
+    "essen_n": { th: "อาหาร", phonetic: "aa-hǎan", de: "Essen" },
+    "food": { th: "อาหาร", phonetic: "aa-hǎan", de: "Essen" },
+    "mögen": { th: "ชอบ", phonetic: "chɔ̂ɔp", de: "mögen" },
+    "like": { th: "ชอบ", phonetic: "chɔ̂ɔp", de: "mögen" },
+    "mag": { th: "ชอบ", phonetic: "chɔ̂ɔp", de: "mögen" },
     "nicht": { th: "ไม่", phonetic: "mâi", de: "nicht" },
     "not": { th: "ไม่", phonetic: "mâi", de: "nicht" },
     "und": { th: "และ", phonetic: "lɛ́", de: "und" },
