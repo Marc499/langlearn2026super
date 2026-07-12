@@ -192,8 +192,31 @@ const AUTH = (function () {
     saveUserWords(username, words);
   }
 
+  // ==================== PER-USER LEARNING PROGRESS ====================
+
+  function progressKey(username) {
+    return 'thaiapp_progress_' + username;
+  }
+
+  function getUserProgress(username) {
+    try {
+      return JSON.parse(localStorage.getItem(progressKey(username))) || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveUserProgress(username, progress) {
+    localStorage.setItem(progressKey(username), JSON.stringify(progress));
+  }
+
+  function resetUserProgress(username) {
+    localStorage.removeItem(progressKey(username));
+  }
+
   return {
     login, logout, currentUser, register, resetPassword, listUsers,
-    getUserWords, addUserWord, deleteUserWord
+    getUserWords, addUserWord, deleteUserWord,
+    getUserProgress, saveUserProgress, resetUserProgress
   };
 })();
