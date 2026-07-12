@@ -718,6 +718,100 @@
       cursor: pointer;
     }
 
+    /* ==================== KI-ÜBERSETZUNG ==================== */
+    .ai-settings {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 0.8rem 1rem;
+      box-shadow: var(--shadow);
+      margin-top: 1rem;
+      font-size: 0.85rem;
+    }
+
+    .ai-settings summary {
+      font-weight: 600;
+      color: var(--primary);
+      cursor: pointer;
+    }
+
+    .ai-settings p {
+      margin: 0.7rem 0;
+      line-height: 1.5;
+      color: var(--text-light);
+    }
+
+    .ai-key-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    #ai-key-input {
+      flex: 1;
+      padding: 0.6rem 0.8rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      min-width: 0;
+    }
+
+    #ai-key-input:focus {
+      border-color: var(--primary-light);
+    }
+
+    .ai-status {
+      margin-top: 0.6rem;
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+
+    .ai-status.ok { color: var(--success); }
+    .ai-status.warn { color: #af601a; }
+
+    #ai-key-remove {
+      margin-top: 0.6rem;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.8rem;
+    }
+
+    .match-badge.ai {
+      background: #ede7f6;
+      color: #5e35b1;
+    }
+
+    .ai-loading {
+      display: inline-block;
+      animation: ai-pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes ai-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+
+    .ai-error {
+      background: #fdebd0;
+      color: #af601a;
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .save-ai-btn {
+      margin-top: 0.7rem;
+      font-size: 0.85rem;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .save-ai-btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
     /* ==================== GAMIFICATION ==================== */
     .sound-toggle {
       flex: 0 0 52px;
@@ -1100,6 +1194,24 @@
     <div id="results">
       <div class="no-result">Geben Sie einen deutschen oder englischen Satz ein und drücken Sie "Übersetzen".</div>
     </div>
+
+    <details class="ai-settings">
+      <summary>🤖 KI-Übersetzung einrichten (optional)</summary>
+      <p>
+        Mit einem eigenen API-Schlüssel übersetzt die App beliebige Sätze per KI –
+        inklusive Phonetik und Wort-für-Wort. Empfehlung: <strong>Google Gemini</strong>
+        (kostenlos, Schlüssel unter <strong>aistudio.google.com/apikey</strong>) oder
+        <strong>OpenAI</strong> (sehr günstig, Schlüssel beginnt mit "sk-").
+        Der Schlüssel wird <strong>nur auf diesem Gerät</strong> gespeichert.
+        Ohne Schlüssel arbeitet die App wie bisher offline.
+      </p>
+      <div class="ai-key-row">
+        <input type="password" id="ai-key-input" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <button class="btn btn-primary" id="ai-key-save">Speichern</button>
+      </div>
+      <div class="ai-status" id="ai-key-status"></div>
+      <button class="btn btn-secondary" id="ai-key-remove" style="display:none">Schlüssel löschen</button>
+    </details>
   </section>
 
   <!-- TAB: LEARN -->
@@ -1206,6 +1318,17 @@
     </div>
 
     <div class="info-section">
+      <h3>KI-Übersetzung (optional)</h3>
+      <p>Findet das eingebaute Wörterbuch keinen guten Treffer, kann die App beliebige Sätze per KI übersetzen – mit Thai-Schrift, Phonetik und Wort-für-Wort. So richten Sie es ein:</p>
+      <ul>
+        <li><strong>Google Gemini (empfohlen, kostenlos):</strong> Auf <strong>aistudio.google.com/apikey</strong> mit Google-Konto anmelden und einen API-Schlüssel erstellen (beginnt mit "AIza"). Bis zu 1.500 Anfragen pro Tag gratis, keine Kreditkarte nötig.</li>
+        <li><strong>OpenAI (sehr günstig):</strong> Auf <strong>platform.openai.com</strong> einen Schlüssel erstellen (beginnt mit "sk-"). Mindestens 5 $ Guthaben nötig, eine Übersetzung kostet einen Bruchteil eines Cents.</li>
+        <li>Den Schlüssel im Tab "Übersetzen" unter <strong>"🤖 KI-Übersetzung einrichten"</strong> eintragen.</li>
+        <li>Der Schlüssel wird nur lokal auf diesem Gerät gespeichert und nie weitergegeben. KI-Ergebnisse lassen sich mit einem Klick in "Meine Wörter" übernehmen und fließen so ins Lernsystem ein.</li>
+      </ul>
+    </div>
+
+    <div class="info-section">
       <h3>Audio-Hinweise</h3>
       <p>Die Audio-Ausgabe nutzt die Web Speech API Ihres Android-Gerätes. Für die beste Erfahrung:</p>
       <ul>
@@ -1231,6 +1354,7 @@
   <script src="data/dictionary.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/gamification.js"></script>
+  <script src="js/ai-translate.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
