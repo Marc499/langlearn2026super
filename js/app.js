@@ -398,6 +398,34 @@
     window.speechSynthesis.getVoices();
   }
 
+  // ==================== PRIORITÄTS-LERNLISTE ====================
+
+  function isPriority(p) {
+    const user = AUTH.currentUser();
+    return user ? AUTH.getUserPriorities(user).includes(learnKey(p)) : false;
+  }
+
+  // Attributwert-sicheres Escaping (auch Anführungszeichen)
+  function escapeAttrValue(text) {
+    return escapeHtml(text).replace(/"/g, '&quot;');
+  }
+
+  function priorityBtnHtml(p) {
+    const active = isPriority(p);
+    return '<button class="priority-btn' + (active ? ' active' : '') + '" ' +
+      'data-key="' + escapeAttrValue(learnKey(p)) + '" ' +
+      'onclick="event.stopPropagation(); togglePriority(this)">' +
+      (active ? '⭐ Auf der Lernliste' : '☆ Mit Priorität lernen') + '</button>';
+  }
+
+  window.togglePriority = function (btn) {
+    const user = AUTH.currentUser();
+    if (!user) return;
+    const nowActive = AUTH.toggleUserPriority(user, btn.dataset.key);
+    btn.classList.toggle('active', nowActive);
+    btn.textContent = nowActive ? '⭐ Auf der Lernliste' : '☆ Mit Priorität lernen';
+  };
+
   // ==================== BROWSE / WORTLISTE ====================
 
   function getCategories() {
@@ -469,6 +497,7 @@
                 <span class="result-label">Wort-für-Wort:</span>
                 <span class="result-value word-by-word">${escapeHtml(p.wordByWord)}</span>
               </div>
+              ${priorityBtnHtml(p)}
             </div>
           </div>
         `;
@@ -545,6 +574,7 @@
             <span class="result-label">Wort-für-Wort:</span>
             <span class="result-value word-by-word">${escapeHtml(p.wordByWord)}</span>
           </div>
+          ${priorityBtnHtml(p)}
         </div>
       `;
     }
@@ -739,6 +769,10 @@
       opt.textContent = cat;
       learnSource.appendChild(opt);
     }
+    const prio = document.createElement('option');
+    prio.value = 'priority';
+    prio.textContent = '⭐ Meine Lernliste';
+    learnSource.appendChild(prio);
     const own = document.createElement('option');
     own.value = 'custom';
     own.textContent = 'Meine Wörter';
@@ -755,6 +789,9 @@
     const userWords = user ? AUTH.getUserWords(user) : [];
     if (src === 'custom') {
       learnPool = userWords.slice();
+    } else if (src === 'priority') {
+      const keys = user ? AUTH.getUserPriorities(user) : [];
+      learnPool = DICTIONARY.phrases.concat(userWords).filter(p => keys.includes(learnKey(p)));
     } else if (src.startsWith('cat:')) {
       learnPool = (getCategories().get(src.slice(4)) || []).slice();
     } else {
@@ -762,14 +799,19 @@
     }
   }
 
-  // Difficult words (more failures) get a higher weight and appear more often
+  // Difficult words (more failures) get a higher weight and appear more often;
+  // words on the priority learn list are boosted strongly on top of that.
   function pickCard() {
     if (learnPool.length === 0) return null;
     const progress = loadProgress();
+    const user = AUTH.currentUser();
+    const prioKeys = new Set(user ? AUTH.getUserPriorities(user) : []);
     const weighted = [];
     for (const p of learnPool) {
-      const st = progress[learnKey(p)] || { ok: 0, fail: 0 };
-      const w = Math.max(1, 1 + 3 * st.fail - st.ok);
+      const key = learnKey(p);
+      const st = progress[key] || { ok: 0, fail: 0 };
+      let w = Math.max(1, 1 + 3 * st.fail - st.ok);
+      if (prioKeys.has(key)) w *= 6;
       weighted.push({ p, w });
     }
     let candidates = weighted;
@@ -804,7 +846,9 @@
     populateLearnSources();
     buildLearnPool();
     if (learnPool.length === 0) {
-      learnArea.innerHTML = '<div class="no-result">Keine Einträge in dieser Auswahl.<br><small>Fügen Sie unter "Meine Wörter" eigene Einträge hinzu.</small></div>';
+      learnArea.innerHTML = learnSource.value === 'priority'
+        ? '<div class="no-result">Ihre Lernliste ist noch leer.<br><small>Markieren Sie Wörter in der Wortliste mit "☆ Mit Priorität lernen".</small></div>'
+        : '<div class="no-result">Keine Einträge in dieser Auswahl.<br><small>Fügen Sie unter "Meine Wörter" eigene Einträge hinzu.</small></div>';
       learnStats.textContent = '';
       return;
     }
@@ -819,6 +863,7 @@
     const c = currentCard;
     learnArea.innerHTML = `
       <div class="flashcard" id="fc" onclick="flipCard()">
+        ${isPriority(c) ? '<div class="fc-star">⭐ Lernliste</div>' : ''}
         <div class="fc-prompt">${escapeHtml(c.de)}</div>
         ${c.en && c.en !== c.de ? '<div class="fc-en">' + escapeHtml(c.en) + '</div>' : ''}
         <div class="fc-hint">Tippen zum Umdrehen</div>
@@ -890,7 +935,7 @@
       <div class="quiz-score">Punkte: ${quizScore.right}/${quizScore.total}</div>
       <div class="quiz-prompt">
         <div style="font-size:0.8rem;color:var(--text-light)">Was heißt auf Thai:</div>
-        <div class="qp-word">${escapeHtml(c.de)}</div>
+        <div class="qp-word">${isPriority(c) ? '⭐ ' : ''}${escapeHtml(c.de)}</div>
       </div>
     `;
     options.forEach((o, i) => {
