@@ -212,7 +212,9 @@
     return results;
   }
 
-  function translate() {
+  let lastAiResult = null;
+
+  async function translate() {
     const query = inputField.value.trim();
     if (!query) {
       showMessage('Bitte geben Sie einen Satz oder ein Wort ein.');
@@ -220,16 +222,52 @@
     }
 
     const results = searchPhrases(query);
+    const bestMatch = results.length > 0 ? results[0].matchType : null;
+
+    // Gute Wörterbuch-Treffer haben Vorrang (offline, sofort, geprüfte Qualität)
+    if (bestMatch === 'exact' || bestMatch === 'partial') {
+      renderResults(results);
+      return;
+    }
+
+    // Kein oder nur lückenhafter Treffer: KI fragen, falls Schlüssel hinterlegt
+    if (AI_TRANSLATE.hasKey()) {
+      showMessage('<span class="ai-loading">🤖 ' + AI_TRANSLATE.providerName() + ' übersetzt ...</span>');
+      try {
+        const ai = await AI_TRANSLATE.translate(query);
+        // Antwort verwerfen, wenn der Nutzer inzwischen etwas anderes eingegeben hat
+        if (inputField.value.trim() !== query) return;
+        lastAiResult = ai;
+        renderResults([{ ...ai, matchType: 'ai' }].concat(results));
+        return;
+      } catch (e) {
+        if (inputField.value.trim() !== query) return;
+        if (results.length > 0) {
+          renderResults(results);
+          resultsContainer.insertAdjacentHTML('afterbegin',
+            '<div class="ai-error">⚠️ KI-Übersetzung fehlgeschlagen: ' + escapeHtml(e.message) +
+            '<br><small>Es wird das Offline-Wörterbuch angezeigt.</small></div>');
+        } else {
+          showMessage('⚠️ KI-Übersetzung fehlgeschlagen: ' + escapeHtml(e.message));
+        }
+        return;
+      }
+    }
 
     if (results.length === 0) {
       showMessage(
         'Keine Übersetzung gefunden für: "' + query + '"<br>' +
-        '<small>Versuchen Sie ein anderes Wort oder schauen Sie in der Wortliste.</small>'
+        '<small>Versuchen Sie ein anderes Wort oder schauen Sie in der Wortliste.<br>' +
+        '💡 Tipp: Richten Sie unten die KI-Übersetzung ein, um beliebige Sätze zu übersetzen.</small>'
       );
       return;
     }
 
     renderResults(results);
+    // Lückenhaftes Ergebnis ohne KI-Schlüssel: auf die KI-Option hinweisen
+    resultsContainer.insertAdjacentHTML('beforeend',
+      '<div class="no-result" style="padding:0.5rem 1rem"><small>💡 Tipp: Mit der KI-Übersetzung (unten einrichten) ' +
+      'werden auch die Wörter in [Klammern] übersetzt.</small></div>');
   }
 
   function showMessage(html) {
@@ -240,7 +278,8 @@
   function renderResults(results) {
     let html = '';
     for (const r of results) {
-      let matchLabel = r.matchType === 'exact' ? 'Exakter Treffer' :
+      let matchLabel = r.matchType === 'ai' ? '🤖 KI-Übersetzung (' + AI_TRANSLATE.providerName() + ')' :
+        r.matchType === 'exact' ? 'Exakter Treffer' :
         r.matchType === 'partial' ? 'Ähnlicher Treffer' :
         r.matchType === 'word-by-word' ? 'Wort-für-Wort' :
         'Teilweise Wort-für-Wort';
@@ -275,11 +314,23 @@
             <span class="result-label">Wort-für-Wort (DE):</span>
             <span class="result-value word-by-word">${escapeHtml(r.wordByWord)}</span>
           </div>
+          ${r.matchType === 'ai' ? `
+          <button class="btn btn-secondary save-ai-btn" onclick="saveAiWord(this)">💾 Zu meinen Wörtern</button>` : ''}
         </div>
       `;
     }
     resultsContainer.innerHTML = html;
   }
+
+  // KI-Ergebnis in "Meine Wörter" übernehmen (fließt dann auch ins Lernsystem ein)
+  window.saveAiWord = function (btn) {
+    const user = AUTH.currentUser();
+    if (!user || !lastAiResult) return;
+    AUTH.addUserWord(user, lastAiResult);
+    renderMyWords();
+    btn.textContent = '✓ Gespeichert';
+    btn.disabled = true;
+  };
 
   // ==================== AUDIO ====================
 
