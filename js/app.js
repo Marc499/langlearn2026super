@@ -106,6 +106,7 @@
 
   document.getElementById('logout-btn').addEventListener('click', () => {
     AUTH.logout();
+    GAMIFY.resetStreak();
     document.getElementById('login-pass').value = '';
     loginOverlay.style.display = 'flex';
     showLoginView('view-login');
@@ -743,7 +744,7 @@
     if (learnMode === 'quiz' && quizScore.total > 0) {
       text += ' · Quiz: ' + quizScore.right + '/' + quizScore.total + ' richtig';
     }
-    learnStats.textContent = text;
+    learnStats.innerHTML = escapeHtml(text) + GAMIFY.streakHtml();
   }
 
   function learnRefresh() {
@@ -797,6 +798,7 @@
 
   window.answerCard = function (ok) {
     recordResult(currentCard, ok);
+    GAMIFY.feedback(ok);
     updateLearnStats();
     renderFlashcard();
   };
@@ -860,11 +862,13 @@
       b.onclick = null;
       if (b.dataset.correct === 'true') b.classList.add('correct');
     });
-    if (!correct) btn.classList.add('wrong');
+    if (!correct) btn.classList.add('wrong', 'shake');
 
-    playAudio(currentCard.th);
+    GAMIFY.feedback(correct);
+    // Thai-Audio kurz verzögert, damit erst der Feedback-Sound zu hören ist
+    setTimeout(() => playAudio(currentCard.th), 500);
     updateLearnStats();
-    setTimeout(renderQuiz, correct ? 1200 : 2500);
+    setTimeout(renderQuiz, correct ? 1400 : 2600);
   };
 
   // ---------- Learn controls ----------
@@ -886,6 +890,7 @@
     if (confirm('Lernfortschritt wirklich zurücksetzen?')) {
       AUTH.resetUserProgress(user);
       quizScore = { right: 0, total: 0 };
+      GAMIFY.resetStreak();
       learnRefresh();
     }
   });

@@ -718,6 +718,120 @@
       cursor: pointer;
     }
 
+    /* ==================== GAMIFICATION ==================== */
+    .sound-toggle {
+      flex: 0 0 52px;
+      padding: 0.6rem 0;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      font-size: 1.15rem;
+      cursor: pointer;
+    }
+
+    .sound-toggle.muted {
+      opacity: 0.55;
+    }
+
+    #gamify-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 500;
+    }
+
+    #gamify-overlay .gamify-emoji {
+      font-size: 5rem;
+      line-height: 1;
+      animation: gamify-pop 1.1s ease-out forwards;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25));
+    }
+
+    #gamify-overlay.gamify-fail .gamify-emoji {
+      animation: gamify-pop 1.6s ease-out forwards, gamify-shake 0.5s ease-in-out;
+    }
+
+    #gamify-overlay .gamify-text {
+      margin-top: 0.4rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 0.25rem 1rem;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.92);
+      box-shadow: var(--shadow);
+      animation: gamify-fade 1.1s ease-out forwards;
+    }
+
+    #gamify-overlay.gamify-ok .gamify-text {
+      color: var(--success);
+    }
+
+    #gamify-overlay.gamify-fail .gamify-text {
+      color: #c0392b;
+      animation-duration: 1.6s;
+    }
+
+    @keyframes gamify-pop {
+      0%   { transform: scale(0.2); opacity: 0; }
+      18%  { transform: scale(1.25); opacity: 1; }
+      30%  { transform: scale(1); }
+      75%  { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0; }
+    }
+
+    @keyframes gamify-fade {
+      0%   { opacity: 0; transform: translateY(8px); }
+      15%  { opacity: 1; transform: translateY(0); }
+      75%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes gamify-shake {
+      0%, 100% { margin-left: 0; }
+      20% { margin-left: -16px; }
+      40% { margin-left: 14px; }
+      60% { margin-left: -10px; }
+      80% { margin-left: 8px; }
+    }
+
+    .gamify-confetti {
+      position: fixed;
+      bottom: -2rem;
+      z-index: 499;
+      pointer-events: none;
+      animation: gamify-rise 1.8s ease-out forwards;
+    }
+
+    @keyframes gamify-rise {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-90vh) rotate(340deg); opacity: 0; }
+    }
+
+    .quiz-option.shake {
+      animation: option-shake 0.4s ease-in-out;
+    }
+
+    @keyframes option-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      50% { transform: translateX(7px); }
+      75% { transform: translateX(-5px); }
+    }
+
+    .streak-badge {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .streak-best {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
     /* ==================== LOGIN OVERLAY ==================== */
     #login-overlay {
       position: fixed;
@@ -998,6 +1112,7 @@
         <div class="learn-modes">
           <button class="mode-btn active" data-mode="cards">Karteikarten</button>
           <button class="mode-btn" data-mode="quiz">Quiz</button>
+          <button class="sound-toggle" id="sound-toggle" aria-label="Töne an/aus">🔊</button>
         </div>
       </div>
       <div id="learn-stats"></div>
@@ -1115,6 +1230,7 @@
   <!-- SCRIPTS -->
   <script src="data/dictionary.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/gamification.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
