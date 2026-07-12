@@ -224,8 +224,10 @@
     const results = searchPhrases(query);
     const bestMatch = results.length > 0 ? results[0].matchType : null;
 
-    // Gute Wörterbuch-Treffer haben Vorrang (offline, sofort, geprüfte Qualität)
-    if (bestMatch === 'exact' || bestMatch === 'partial') {
+    // Nur exakte Wörterbuch-Treffer kommen ohne KI aus (offline, sofort, geprüfte Qualität).
+    // Ähnliche Treffer decken oft nur einen Teil des Satzes ab - dann soll die KI
+    // den ganzen Satz übersetzen und der Wörterbuch-Treffer erscheint zusätzlich darunter.
+    if (bestMatch === 'exact') {
       renderResults(results);
       return;
     }
@@ -264,10 +266,10 @@
     }
 
     renderResults(results);
-    // Lückenhaftes Ergebnis ohne KI-Schlüssel: auf die KI-Option hinweisen
+    // Unvollständiges Ergebnis ohne KI-Schlüssel: auf die KI-Option hinweisen
     resultsContainer.insertAdjacentHTML('beforeend',
       '<div class="no-result" style="padding:0.5rem 1rem"><small>💡 Tipp: Mit der KI-Übersetzung (unten einrichten) ' +
-      'werden auch die Wörter in [Klammern] übersetzt.</small></div>');
+      'wird Ihr ganzer Satz übersetzt.</small></div>');
   }
 
   function showMessage(html) {
