@@ -93,15 +93,16 @@
 
     .tab-btn {
       flex: 1;
-      padding: 0.75rem 0.5rem;
+      padding: 0.7rem 0.15rem;
       border: none;
       background: none;
-      font-size: 0.9rem;
+      font-size: 0.78rem;
       font-weight: 600;
       color: var(--text-light);
       cursor: pointer;
       border-bottom: 3px solid transparent;
       transition: all 0.2s;
+      white-space: nowrap;
     }
 
     .tab-btn.active {
@@ -528,6 +529,195 @@
       }
     }
 
+    /* ==================== LEARN TAB ==================== */
+    .learn-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    #learn-source {
+      padding: 0.6rem 0.8rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: white;
+      font-family: inherit;
+    }
+
+    .learn-modes {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 0.6rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-light);
+      cursor: pointer;
+    }
+
+    .mode-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    #learn-stats {
+      margin-top: 0.6rem;
+      font-size: 0.8rem;
+      color: var(--text-light);
+      text-align: center;
+    }
+
+    .flashcard {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      min-height: 230px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      border: 2px solid var(--border);
+      margin-bottom: 0.75rem;
+    }
+
+    .flashcard .fc-prompt {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: capitalize;
+    }
+
+    .flashcard .fc-en {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      margin-top: 0.4rem;
+    }
+
+    .flashcard .fc-hint {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-top: 1.5rem;
+    }
+
+    .flashcard .fc-thai {
+      font-size: 2rem;
+      color: var(--thai-color);
+      font-weight: 600;
+      letter-spacing: 2px;
+      line-height: 1.6;
+    }
+
+    .flashcard .fc-phonetic {
+      font-size: 1.15rem;
+      color: var(--phonetic-color);
+      font-style: italic;
+      margin-top: 0.6rem;
+    }
+
+    .flashcard .fc-ww {
+      font-size: 0.95rem;
+      color: var(--success);
+      margin-top: 0.6rem;
+    }
+
+    .fc-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .fc-actions .btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .btn-know {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-dontknow {
+      background: #c0392b;
+      color: white;
+    }
+
+    .quiz-option {
+      display: block;
+      width: 100%;
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+      margin-bottom: 0.5rem;
+      font-size: 1.15rem;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .quiz-option .qo-thai {
+      color: var(--thai-color);
+      font-weight: 600;
+    }
+
+    .quiz-option .qo-ph {
+      font-size: 0.85rem;
+      color: var(--phonetic-color);
+      font-style: italic;
+      display: block;
+    }
+
+    .quiz-option.correct {
+      background: #d5f5e3;
+      border-color: var(--success);
+    }
+
+    .quiz-option.wrong {
+      background: #fdecea;
+      border-color: #c0392b;
+    }
+
+    .quiz-prompt {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .quiz-prompt .qp-word {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: capitalize;
+    }
+
+    .quiz-score {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-bottom: 0.75rem;
+    }
+
+    .learn-footer {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .learn-footer a {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
     /* ==================== LOGIN OVERLAY ==================== */
     #login-overlay {
       position: fixed;
@@ -757,6 +947,7 @@
   <!-- TABS -->
   <nav class="tabs">
     <button class="tab-btn active" data-tab="translate-tab">Übersetzen</button>
+    <button class="tab-btn" data-tab="learn-tab">Lernen</button>
     <button class="tab-btn" data-tab="browse-tab">Wortliste</button>
     <button class="tab-btn" data-tab="mywords-tab">Meine Wörter</button>
     <button class="tab-btn" data-tab="info-tab">Info</button>
@@ -794,6 +985,26 @@
 
     <div id="results">
       <div class="no-result">Geben Sie einen deutschen oder englischen Satz ein und drücken Sie "Übersetzen".</div>
+    </div>
+  </section>
+
+  <!-- TAB: LEARN -->
+  <section id="learn-tab" class="tab-panel">
+    <div class="input-area">
+      <div class="learn-controls">
+        <select id="learn-source">
+          <option value="all">Alle Kategorien</option>
+        </select>
+        <div class="learn-modes">
+          <button class="mode-btn active" data-mode="cards">Karteikarten</button>
+          <button class="mode-btn" data-mode="quiz">Quiz</button>
+        </div>
+      </div>
+      <div id="learn-stats"></div>
+    </div>
+    <div id="learn-area"></div>
+    <div class="learn-footer">
+      <a id="reset-progress">Lernfortschritt zurücksetzen</a>
     </div>
   </section>
 

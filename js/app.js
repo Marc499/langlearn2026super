@@ -119,6 +119,7 @@
       tabPanels.forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(target).classList.add('active');
+      if (target === 'learn-tab') learnRefresh();
     });
   });
 
@@ -638,6 +639,255 @@
       document.getElementById(id).value = '';
     });
     renderMyWords();
+  });
+
+  // ==================== LEARN / LERNSYSTEM ====================
+
+  const learnArea = document.getElementById('learn-area');
+  const learnStats = document.getElementById('learn-stats');
+  const learnSource = document.getElementById('learn-source');
+
+  let learnMode = 'cards';
+  let learnPool = [];
+  let currentCard = null;
+  let lastCardKey = null;
+  let quizScore = { right: 0, total: 0 };
+
+  function learnKey(p) {
+    return p.de + '|' + p.th;
+  }
+
+  function loadProgress() {
+    const user = AUTH.currentUser();
+    return user ? AUTH.getUserProgress(user) : {};
+  }
+
+  function saveProgress(progress) {
+    const user = AUTH.currentUser();
+    if (user) AUTH.saveUserProgress(user, progress);
+  }
+
+  function recordResult(card, ok) {
+    const progress = loadProgress();
+    const key = learnKey(card);
+    if (!progress[key]) progress[key] = { ok: 0, fail: 0 };
+    if (ok) progress[key].ok++; else progress[key].fail++;
+    saveProgress(progress);
+  }
+
+  function populateLearnSources() {
+    const previous = learnSource.value;
+    // Keep first option (Alle), rebuild the rest
+    while (learnSource.options.length > 1) learnSource.remove(1);
+    for (const cat of getCategories().keys()) {
+      const opt = document.createElement('option');
+      opt.value = 'cat:' + cat;
+      opt.textContent = cat;
+      learnSource.appendChild(opt);
+    }
+    const own = document.createElement('option');
+    own.value = 'custom';
+    own.textContent = 'Meine Wörter';
+    learnSource.appendChild(own);
+    // Restore the previous selection if it still exists
+    if ([...learnSource.options].some(o => o.value === previous)) {
+      learnSource.value = previous;
+    }
+  }
+
+  function buildLearnPool() {
+    const src = learnSource.value;
+    const user = AUTH.currentUser();
+    const userWords = user ? AUTH.getUserWords(user) : [];
+    if (src === 'custom') {
+      learnPool = userWords.slice();
+    } else if (src.startsWith('cat:')) {
+      learnPool = (getCategories().get(src.slice(4)) || []).slice();
+    } else {
+      learnPool = DICTIONARY.phrases.concat(userWords);
+    }
+  }
+
+  // Difficult words (more failures) get a higher weight and appear more often
+  function pickCard() {
+    if (learnPool.length === 0) return null;
+    const progress = loadProgress();
+    const weighted = [];
+    for (const p of learnPool) {
+      const st = progress[learnKey(p)] || { ok: 0, fail: 0 };
+      const w = Math.max(1, 1 + 3 * st.fail - st.ok);
+      weighted.push({ p, w });
+    }
+    let candidates = weighted;
+    if (weighted.length > 1 && lastCardKey) {
+      candidates = weighted.filter(x => learnKey(x.p) !== lastCardKey);
+    }
+    const total = candidates.reduce((s, x) => s + x.w, 0);
+    let r = Math.random() * total;
+    for (const x of candidates) {
+      r -= x.w;
+      if (r <= 0) { lastCardKey = learnKey(x.p); return x.p; }
+    }
+    lastCardKey = learnKey(candidates[candidates.length - 1].p);
+    return candidates[candidates.length - 1].p;
+  }
+
+  function updateLearnStats() {
+    const progress = loadProgress();
+    let learned = 0;
+    for (const p of learnPool) {
+      const st = progress[learnKey(p)];
+      if (st && st.ok - st.fail >= 2) learned++;
+    }
+    let text = learned + ' von ' + learnPool.length + ' gelernt';
+    if (learnMode === 'quiz' && quizScore.total > 0) {
+      text += ' · Quiz: ' + quizScore.right + '/' + quizScore.total + ' richtig';
+    }
+    learnStats.textContent = text;
+  }
+
+  function learnRefresh() {
+    populateLearnSources();
+    buildLearnPool();
+    if (learnPool.length === 0) {
+      learnArea.innerHTML = '<div class="no-result">Keine Einträge in dieser Auswahl.<br><small>Fügen Sie unter "Meine Wörter" eigene Einträge hinzu.</small></div>';
+      learnStats.textContent = '';
+      return;
+    }
+    updateLearnStats();
+    if (learnMode === 'cards') renderFlashcard(); else renderQuiz();
+  }
+
+  // ---------- Flashcards ----------
+
+  function renderFlashcard() {
+    currentCard = pickCard();
+    const c = currentCard;
+    learnArea.innerHTML = `
+      <div class="flashcard" id="fc" onclick="flipCard()">
+        <div class="fc-prompt">${escapeHtml(c.de)}</div>
+        ${c.en && c.en !== c.de ? '<div class="fc-en">' + escapeHtml(c.en) + '</div>' : ''}
+        <div class="fc-hint">Tippen zum Umdrehen</div>
+      </div>
+      <div class="fc-actions">
+        <button class="btn btn-secondary" onclick="flipCard()">Umdrehen</button>
+      </div>
+    `;
+  }
+
+  window.flipCard = function () {
+    const c = currentCard;
+    if (!c) return;
+    learnArea.innerHTML = `
+      <div class="flashcard">
+        <div class="fc-thai">${escapeHtml(c.th)}</div>
+        <div class="fc-phonetic">${escapeHtml(c.phonetic)}</div>
+        <div class="fc-ww">${escapeHtml(c.wordByWord)}</div>
+        <div class="fc-en" style="margin-top:0.8rem">${escapeHtml(c.de)}</div>
+        <button class="audio-btn" style="margin-top:0.8rem" onclick="event.stopPropagation(); playAudio('${escapeAttr(c.th)}')" aria-label="Thai Audio abspielen">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        </button>
+      </div>
+      <div class="fc-actions">
+        <button class="btn btn-know" onclick="answerCard(true)">✓ Gewusst</button>
+        <button class="btn btn-dontknow" onclick="answerCard(false)">✗ Nicht gewusst</button>
+      </div>
+    `;
+  };
+
+  window.answerCard = function (ok) {
+    recordResult(currentCard, ok);
+    updateLearnStats();
+    renderFlashcard();
+  };
+
+  // ---------- Quiz ----------
+
+  function renderQuiz() {
+    currentCard = pickCard();
+    const c = currentCard;
+
+    // Distractors: 3 other entries; fall back to the whole dictionary if the pool is small
+    let distractorSource = learnPool.filter(p => learnKey(p) !== learnKey(c));
+    if (distractorSource.length < 3) {
+      const extra = DICTIONARY.phrases.filter(p => learnKey(p) !== learnKey(c));
+      distractorSource = distractorSource.concat(extra);
+    }
+    const distractors = [];
+    const used = new Set([c.th]);
+    while (distractors.length < 3 && distractorSource.length > 0) {
+      const i = Math.floor(Math.random() * distractorSource.length);
+      const cand = distractorSource.splice(i, 1)[0];
+      if (!used.has(cand.th)) {
+        used.add(cand.th);
+        distractors.push(cand);
+      }
+    }
+
+    const options = distractors.concat([c]);
+    // Shuffle
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
+    }
+
+    let html = `
+      <div class="quiz-score">Punkte: ${quizScore.right}/${quizScore.total}</div>
+      <div class="quiz-prompt">
+        <div style="font-size:0.8rem;color:var(--text-light)">Was heißt auf Thai:</div>
+        <div class="qp-word">${escapeHtml(c.de)}</div>
+      </div>
+    `;
+    options.forEach((o, i) => {
+      html += `
+        <button class="quiz-option" data-correct="${o.th === c.th}" onclick="answerQuiz(this)">
+          <span class="qo-thai">${escapeHtml(o.th)}</span>
+          <span class="qo-ph">${escapeHtml(o.phonetic)}</span>
+        </button>
+      `;
+    });
+    learnArea.innerHTML = html;
+  }
+
+  window.answerQuiz = function (btn) {
+    const correct = btn.dataset.correct === 'true';
+    quizScore.total++;
+    if (correct) quizScore.right++;
+    recordResult(currentCard, correct);
+
+    // Show feedback: lock all options, highlight correct/wrong
+    document.querySelectorAll('.quiz-option').forEach(b => {
+      b.onclick = null;
+      if (b.dataset.correct === 'true') b.classList.add('correct');
+    });
+    if (!correct) btn.classList.add('wrong');
+
+    playAudio(currentCard.th);
+    updateLearnStats();
+    setTimeout(renderQuiz, correct ? 1200 : 2500);
+  };
+
+  // ---------- Learn controls ----------
+
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      learnMode = btn.dataset.mode;
+      learnRefresh();
+    });
+  });
+
+  learnSource.addEventListener('change', learnRefresh);
+
+  document.getElementById('reset-progress').addEventListener('click', () => {
+    const user = AUTH.currentUser();
+    if (!user) return;
+    if (confirm('Lernfortschritt wirklich zurücksetzen?')) {
+      AUTH.resetUserProgress(user);
+      quizScore = { right: 0, total: 0 };
+      learnRefresh();
+    }
   });
 
   // ==================== HELPERS ====================
