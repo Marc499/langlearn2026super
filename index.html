@@ -718,6 +718,37 @@
       cursor: pointer;
     }
 
+    /* ==================== PRIORITÄTS-LERNLISTE ==================== */
+    .priority-btn {
+      display: block;
+      margin-top: 0.6rem;
+      padding: 0.45rem 0.9rem;
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      background: white;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .priority-btn.active {
+      background: #fef5e7;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .flashcard .fc-star {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: #fef5e7;
+      border-radius: 12px;
+      padding: 0.15rem 0.7rem;
+      margin-bottom: 0.7rem;
+    }
+
     /* ==================== KI-ÜBERSETZUNG ==================== */
     .ai-settings {
       background: var(--card-bg);
@@ -1343,6 +1374,7 @@
       <h3>Tipps</h3>
       <ul>
         <li>Tippen Sie auf einen Eintrag in der Wortliste, um Details zu sehen</li>
+        <li>Mit <strong>"☆ Mit Priorität lernen"</strong> in der Wortliste markieren Sie Wörter für Ihre Lernliste – sie kommen dann deutlich häufiger in Karteikarten und Quiz dran. Im Lernen-Tab können Sie mit <strong>"⭐ Meine Lernliste"</strong> auch gezielt nur diese Wörter üben</li>
         <li>Nutzen Sie die Schnell-Beispiele für häufige Sätze</li>
         <li>Die App funktioniert auch offline!</li>
         <li>Thai-Höflichkeitspartikel: Männer sagen <strong>ครับ</strong> (khráp), Frauen sagen <strong>ค่ะ</strong> (khà) am Satzende</li>

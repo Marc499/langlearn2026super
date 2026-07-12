@@ -214,9 +214,35 @@ const AUTH = (function () {
     localStorage.removeItem(progressKey(username));
   }
 
+  // ==================== PER-USER PRIORITY LEARN LIST ====================
+  // Wörter, die der Nutzer gezielt (mit hoher Priorität) lernen möchte.
+  // Gespeichert als Liste von Lern-Schlüsseln ("de|th").
+
+  function priorityStorageKey(username) {
+    return 'thaiapp_priority_' + username;
+  }
+
+  function getUserPriorities(username) {
+    try {
+      return JSON.parse(localStorage.getItem(priorityStorageKey(username))) || [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Umschalten; gibt zurück, ob der Eintrag jetzt priorisiert ist
+  function toggleUserPriority(username, key) {
+    const list = getUserPriorities(username);
+    const i = list.indexOf(key);
+    if (i >= 0) list.splice(i, 1); else list.push(key);
+    localStorage.setItem(priorityStorageKey(username), JSON.stringify(list));
+    return i < 0;
+  }
+
   return {
     login, logout, currentUser, register, resetPassword, listUsers,
     getUserWords, addUserWord, deleteUserWord,
-    getUserProgress, saveUserProgress, resetUserProgress
+    getUserProgress, saveUserProgress, resetUserProgress,
+    getUserPriorities, toggleUserPriority
   };
 })();
