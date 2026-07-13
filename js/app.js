@@ -920,9 +920,11 @@
   const audioLearnBtn = document.getElementById('audio-learn-btn');
   const audioLearnWait = document.getElementById('audio-learn-wait');
   const audioLearnRepeat = document.getElementById('audio-learn-repeat');
+  const audioLearnGap = document.getElementById('audio-learn-gap');
   const audioLearnStatus = document.getElementById('audio-learn-status');
   const AUDIO_WAIT_KEY = 'thaiapp_audio_wait';
   const AUDIO_REPEAT_KEY = 'thaiapp_audio_repeat';
+  const AUDIO_GAP_KEY = 'thaiapp_audio_gap';
 
   let audioLearnToken = 0; // laufende Wiedergabe wird ungültig, wenn sich der Token ändert
   let audioLearnActive = false;
@@ -935,6 +937,11 @@
   audioLearnRepeat.value = localStorage.getItem(AUDIO_REPEAT_KEY) || '1';
   audioLearnRepeat.addEventListener('change', () => {
     localStorage.setItem(AUDIO_REPEAT_KEY, audioLearnRepeat.value);
+  });
+
+  audioLearnGap.value = localStorage.getItem(AUDIO_GAP_KEY) || '1';
+  audioLearnGap.addEventListener('change', () => {
+    localStorage.setItem(AUDIO_GAP_KEY, audioLearnGap.value);
   });
 
   // Vorlesen mit Promise; Sicherheits-Timeout, falls onend nie feuert
@@ -1001,6 +1008,7 @@
 
     const waitMs = (parseInt(audioLearnWait.value, 10) || 3) * 1000;
     const repeats = parseInt(audioLearnRepeat.value, 10) || 1;
+    const gapMs = (parseInt(audioLearnGap.value, 10) || 1) * 1000;
 
     for (let i = 0; i < pool.length; i++) {
       const p = pool[i];
@@ -1018,7 +1026,7 @@
         if (token !== audioLearnToken) return;
         await speakAsync(p.wordByWord, 'de-DE');                  // Wort-für-Wort
         if (token !== audioLearnToken) return;
-        await audioSleep(r < repeats ? 600 : 900);                // Lücke zur Wiederholung / zum nächsten Wort
+        await audioSleep(r < repeats ? 600 : gapMs);              // Lücke zur Wiederholung / zum nächsten Wort
       }
     }
 
