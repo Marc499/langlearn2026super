@@ -492,7 +492,8 @@
     const user = AUTH.currentUser();
     if (!user) return;
     const card = origin === 'result' ? lastRenderedResults[index] :
-      origin === 'due' ? dueListCards[index] : currentCard;
+      origin === 'due' ? dueListCards[index] :
+      origin === 'browse' ? browseCards[index] : currentCard;
     if (!card) return;
     // Frisch erzeugte Übersetzungen (KI / Wort-für-Wort) gibt es weder im Wörterbuch
     // noch in "Meine Wörter" - erst dort speichern, sonst kann die Karte nie drankommen.
@@ -551,6 +552,9 @@
 
   // ==================== BROWSE / WORTLISTE ====================
 
+  // Karten der aktuell gerenderten Wortliste (Index-Zuordnung für "⏰ Wieder lernen")
+  let browseCards = [];
+
   function getCategories() {
     const cats = new Map();
     for (const phrase of DICTIONARY.phrases) {
@@ -590,6 +594,7 @@
     const cats = getCategories();
     let html = '';
     let count = 0;
+    browseCards = [];
 
     for (const [cat, phrases] of cats) {
       if (filterCat && filterCat !== 'all' && cat !== filterCat) continue;
@@ -597,6 +602,7 @@
       html += `<div class="category-section"><h3>${escapeHtml(cat)}</h3>`;
       for (const p of phrases) {
         count++;
+        browseCards.push(p);
         html += `
           <div class="browse-item" onclick="browseTap(this)">
             <div class="browse-de">${escapeHtml(p.de)}</div>
@@ -621,6 +627,7 @@
                 <span class="result-value word-by-word">${escapeHtml(p.wordByWord)}</span>
               </div>
               ${priorityBtnHtml(p)}
+              ${scheduleRowHtml(p, 'browse', browseCards.length - 1)}
             </div>
           </div>
         `;
@@ -670,7 +677,9 @@
     }
 
     let html = '';
+    browseCards = [];
     for (const p of matches) {
+      browseCards.push(p);
       html += `
         <div class="result-card">
           ${p.custom ? '<div class="match-badge word-by-word">Eigenes Wort</div>' : ''}
@@ -698,6 +707,7 @@
             <span class="result-value word-by-word">${escapeHtml(p.wordByWord)}</span>
           </div>
           ${priorityBtnHtml(p)}
+          ${scheduleRowHtml(p, 'browse', browseCards.length - 1)}
         </div>
       `;
     }
@@ -1055,38 +1065,15 @@
     if (learnMode === 'cards') renderFlashcard(); else renderQuiz();
   };
 
-  // ---------- Fällige-Karten-Übersicht ----------
-  // Zeigt alle gerade fälligen Karten (aus dem ganzen Bestand, unabhängig von
-  // der Kategorie-Auswahl), am längsten überfällige zuerst.
+  // ---------- Wiedervorlage-Übersicht ----------
+  // Zeigt ALLE eingeplanten Karten (aus dem ganzen Bestand, unabhängig von der
+  // Kategorie-Auswahl): jetzt fällige zuerst, dann für später geplante, dann
+  // ausgeschlossene ("Gar nicht"). So ist jede eingeplante Karte sofort sichtbar.
 
-  function renderDueOverview() {
-    const user = AUTH.currentUser();
-    const schedule = loadSchedule();
-    const now = Date.now();
-    const all = DICTIONARY.phrases.concat(user ? AUTH.getUserWords(user) : []);
-    dueListCards = all
-      .filter(p => cardAvailability(p, schedule, now) === 'due')
-      .sort((a, b) => (schedule[learnKey(a)].due || 0) - (schedule[learnKey(b)].due || 0));
-
-    let html = '<div class="due-header">' +
-      '<span class="due-count">⏰ ' + dueListCards.length + ' fällige Karte' + (dueListCards.length === 1 ? '' : 'n') + '</span>' +
-      phoneticToggleBtnHtml() +
-      '</div>' +
-      '<div class="due-hint">Alle fälligen Karten – unabhängig von der Kategorie-Auswahl oben.</div>';
-
-    if (dueListCards.length === 0) {
-      html += '<div class="no-result">🎉 Gerade ist keine Karte fällig.<br>' +
-        '<small>Planen Sie Karten über "⏰ Wieder lernen" auf Übersetzungs- und Lernkarten ein.</small></div>';
-      learnArea.innerHTML = html;
-      return;
-    }
-
-    dueListCards.forEach((p, idx) => {
-      const s = schedule[learnKey(p)];
-      const since = typeof s.due === 'number' ? formatDuration(now - s.due) : '';
-      html += `
+  function dueItemHtml(p, idx, timeLabel, isDue) {
+    return `
         <div class="result-card due-item">
-          ${since ? '<div class="due-since">fällig seit ' + escapeHtml(since) + '</div>' : ''}
+          ${timeLabel ? '<div class="due-since' + (isDue ? '' : ' upcoming') + '">' + escapeHtml(timeLabel) + '</div>' : ''}
           <div class="result-row">
             <span class="result-label">Deutsch:</span>
             <span class="result-value">${escapeHtml(p.de)}</span>
@@ -1109,7 +1096,62 @@
           ${scheduleRowHtml(p, 'due', idx)}
         </div>
       `;
-    });
+  }
+
+  function renderDueOverview() {
+    const user = AUTH.currentUser();
+    const schedule = loadSchedule();
+    const now = Date.now();
+    const all = DICTIONARY.phrases.concat(user ? AUTH.getUserWords(user) : []);
+    const due = [], planned = [], excluded = [];
+    for (const p of all) {
+      const a = cardAvailability(p, schedule, now);
+      if (a === 'due') due.push(p);
+      else if (a === 'later') planned.push(p);
+      else if (a === 'never') excluded.push(p);
+    }
+    const byDue = (a, b) => (schedule[learnKey(a)].due || 0) - (schedule[learnKey(b)].due || 0);
+    due.sort(byDue);
+    planned.sort(byDue);
+    dueListCards = due.concat(planned, excluded);
+
+    let html = '<div class="due-header">' +
+      '<span class="due-count">⏰ ' + due.length + ' fällig · 🗓️ ' + planned.length + ' geplant</span>' +
+      phoneticToggleBtnHtml() +
+      '</div>' +
+      '<div class="due-hint">Alle eingeplanten Karten – unabhängig von der Kategorie-Auswahl oben.</div>';
+
+    if (dueListCards.length === 0) {
+      html += '<div class="no-result">Noch keine Karten eingeplant.<br>' +
+        '<small>Planen Sie Karten über "⏰ Wieder lernen" auf Übersetzungs-, Lern- und Wortlisten-Karten ein.</small></div>';
+      learnArea.innerHTML = html;
+      return;
+    }
+
+    let idx = 0;
+    if (due.length > 0) {
+      html += '<div class="due-section-title">⏰ Jetzt fällig</div>';
+      for (const p of due) {
+        const s = schedule[learnKey(p)];
+        html += dueItemHtml(p, idx++, 'fällig seit ' + formatDuration(now - s.due), true);
+      }
+    } else {
+      html += '<div class="due-section-title">⏰ Jetzt fällig</div>' +
+        '<div class="no-result" style="padding:0.6rem 1rem">🎉 Gerade ist keine Karte fällig.</div>';
+    }
+    if (planned.length > 0) {
+      html += '<div class="due-section-title">🗓️ Für später geplant</div>';
+      for (const p of planned) {
+        const s = schedule[learnKey(p)];
+        html += dueItemHtml(p, idx++, 'fällig in ' + formatDuration(s.due - now), false);
+      }
+    }
+    if (excluded.length > 0) {
+      html += '<div class="due-section-title">🚫 Ausgeschlossen ("Gar nicht")</div>';
+      for (const p of excluded) {
+        html += dueItemHtml(p, idx++, '', false);
+      }
+    }
     learnArea.innerHTML = html;
   }
 
