@@ -493,7 +493,8 @@
     if (!user) return;
     const card = origin === 'result' ? lastRenderedResults[index] :
       origin === 'due' ? dueListCards[index] :
-      origin === 'browse' ? browseCards[index] : currentCard;
+      origin === 'browse' ? browseCards[index] :
+      origin === 'mywords' ? AUTH.getUserWords(user)[index] : currentCard;
     if (!card) return;
     // Frisch erzeugte Übersetzungen (KI / Wort-für-Wort) gibt es weder im Wörterbuch
     // noch in "Meine Wörter" - erst dort speichern, sonst kann die Karte nie drankommen.
@@ -947,6 +948,7 @@
             <span class="result-value word-by-word">${escapeHtml(w.wordByWord)}</span>
           </div>
           ${priorityBtnHtml(w)}
+          ${scheduleRowHtml(w, 'mywords', i)}
         </div>
       `;
     });
