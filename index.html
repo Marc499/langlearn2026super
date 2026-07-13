@@ -718,6 +718,43 @@
       cursor: pointer;
     }
 
+    /* ==================== AUDIO-LERNEN ==================== */
+    .audio-learn-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    #audio-learn-btn {
+      flex: 1;
+      justify-content: center;
+      font-size: 0.9rem;
+      padding: 0.6rem 0.8rem;
+    }
+
+    #audio-learn-btn.playing {
+      background: #c0392b;
+    }
+
+    #audio-learn-wait {
+      flex: 0 0 110px;
+      padding: 0.5rem 0.6rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      background: white;
+      font-family: inherit;
+    }
+
+    #audio-learn-status {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--primary);
+      font-weight: 600;
+      min-height: 1.3em;
+      margin-bottom: 0.5rem;
+    }
+
     /* ==================== PRIORITÄTS-LERNLISTE ==================== */
     .priority-btn {
       display: block;
@@ -1446,6 +1483,16 @@
     <div class="browse-tools">
       <button class="phonetic-toggle" onclick="togglePhonetic()"></button>
     </div>
+    <div class="audio-learn-row">
+      <button class="btn btn-primary" id="audio-learn-btn">🎧 Audio-Lernen starten</button>
+      <select id="audio-learn-wait" title="Denkpause zwischen Deutsch und Thai">
+        <option value="2">2 s Pause</option>
+        <option value="3">3 s Pause</option>
+        <option value="5">5 s Pause</option>
+        <option value="8">8 s Pause</option>
+      </select>
+    </div>
+    <div id="audio-learn-status"></div>
     <div id="browse-list"></div>
   </section>
 

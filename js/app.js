@@ -121,6 +121,8 @@
       btn.classList.add('active');
       document.getElementById(target).classList.add('active');
       if (target === 'learn-tab') learnRefresh();
+      // Audio-Lernen stoppen, wenn die Wortliste verlassen wird
+      if (target !== 'browse-tab' && audioLearnActive) stopAudioLearn();
     });
   });
 
@@ -690,7 +692,9 @@
     return d === 1 ? 'morgen' : 'in ' + d + ' Tagen';
   }
 
-  function renderPriorityList() {
+  // Lernlisten-Einträge inkl. Status, sortiert nach aktuellem Modus.
+  // Auch vom Audio-Lernen genutzt, damit die Reihenfolge der Anzeige entspricht.
+  function buildPriorityEntries() {
     const user = AUTH.currentUser();
     const keys = user ? AUTH.getUserPriorities(user) : [];
     const progress = loadProgress();
@@ -709,15 +713,6 @@
         };
       });
 
-    searchInfo.textContent = entries.length + ' Wörter auf der Lernliste';
-
-    if (entries.length === 0) {
-      browseContainer.innerHTML =
-        '<div class="no-result">Ihre Lernliste ist noch leer.<br>' +
-        '<small>Wählen Sie eine Kategorie, tippen Sie ein Wort an und markieren Sie es mit "☆ Mit Priorität lernen".</small></div>';
-      return;
-    }
-
     if (prioritySortMode === 'alpha') {
       entries.sort((a, b) => a.p.de.localeCompare(b.p.de, 'de'));
     } else {
@@ -732,6 +727,20 @@
         }
         return (b.due - a.due) || a.p.de.localeCompare(b.p.de, 'de');
       });
+    }
+    return { entries, now };
+  }
+
+  function renderPriorityList() {
+    const { entries, now } = buildPriorityEntries();
+
+    searchInfo.textContent = entries.length + ' Wörter auf der Lernliste';
+
+    if (entries.length === 0) {
+      browseContainer.innerHTML =
+        '<div class="no-result">Ihre Lernliste ist noch leer.<br>' +
+        '<small>Wählen Sie eine Kategorie, tippen Sie ein Wort an und markieren Sie es mit "☆ Mit Priorität lernen".</small></div>';
+      return;
     }
 
     let html = `
@@ -902,6 +911,117 @@
       document.querySelector('[data-tab="translate-tab"]').classList.add('active');
       document.getElementById('translate-tab').classList.add('active');
     });
+  });
+
+  // ==================== AUDIO-LERNEN ====================
+  // Liest die aktuell gewählte Kategorie (auch die Lernliste) Wort für Wort vor:
+  // Deutsch -> Denkpause -> Thai -> Wort-für-Wort-Rückübersetzung.
+
+  const audioLearnBtn = document.getElementById('audio-learn-btn');
+  const audioLearnWait = document.getElementById('audio-learn-wait');
+  const audioLearnStatus = document.getElementById('audio-learn-status');
+  const AUDIO_WAIT_KEY = 'thaiapp_audio_wait';
+
+  let audioLearnToken = 0; // laufende Wiedergabe wird ungültig, wenn sich der Token ändert
+  let audioLearnActive = false;
+
+  audioLearnWait.value = localStorage.getItem(AUDIO_WAIT_KEY) || '3';
+  audioLearnWait.addEventListener('change', () => {
+    localStorage.setItem(AUDIO_WAIT_KEY, audioLearnWait.value);
+  });
+
+  // Vorlesen mit Promise; Sicherheits-Timeout, falls onend nie feuert
+  function speakAsync(text, lang, rate) {
+    return new Promise(resolve => {
+      if (!speechSupported || !text) { resolve(); return; }
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang;
+      u.rate = rate || 0.9;
+      if (lang === 'th-TH') {
+        const v = window.speechSynthesis.getVoices().find(x => x.lang.startsWith('th'));
+        if (v) u.voice = v;
+      }
+      let done = false;
+      const finish = () => { if (!done) { done = true; resolve(); } };
+      u.onend = finish;
+      u.onerror = finish;
+      setTimeout(finish, Math.min(15000, 2500 + text.length * 180));
+      window.speechSynthesis.speak(u);
+    });
+  }
+
+  function audioSleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function audioLearnPool() {
+    const src = categoryFilter.value || 'all';
+    if (src === 'priority') {
+      return buildPriorityEntries().entries.map(e => e.p);
+    }
+    const cats = getCategories();
+    if (src !== 'all' && cats.has(src)) return cats.get(src).slice();
+    let pool = [];
+    for (const phrases of cats.values()) pool = pool.concat(phrases);
+    return pool;
+  }
+
+  function stopAudioLearn(finishedText) {
+    audioLearnToken++;
+    audioLearnActive = false;
+    if (speechSupported) window.speechSynthesis.cancel();
+    audioLearnBtn.textContent = '🎧 Audio-Lernen starten';
+    audioLearnBtn.classList.remove('playing');
+    audioLearnStatus.textContent = finishedText || '';
+  }
+
+  async function runAudioLearn() {
+    if (!speechSupported) {
+      audioLearnStatus.textContent = 'Sprachausgabe wird auf diesem Gerät nicht unterstützt.';
+      return;
+    }
+    const pool = audioLearnPool();
+    if (pool.length === 0) {
+      audioLearnStatus.textContent = 'Keine Einträge in dieser Auswahl.';
+      return;
+    }
+
+    const token = ++audioLearnToken;
+    audioLearnActive = true;
+    audioLearnBtn.textContent = '⏹ Stopp';
+    audioLearnBtn.classList.add('playing');
+    window.speechSynthesis.cancel();
+
+    const waitMs = (parseInt(audioLearnWait.value, 10) || 3) * 1000;
+
+    for (let i = 0; i < pool.length; i++) {
+      if (token !== audioLearnToken) return;
+      const p = pool[i];
+      audioLearnStatus.textContent = '🎧 ' + (i + 1) + '/' + pool.length + ': ' + p.de;
+
+      await speakAsync(p.de, 'de-DE');                          // Quelle (Deutsch)
+      if (token !== audioLearnToken) return;
+      await audioSleep(waitMs);                                 // Denkpause
+      if (token !== audioLearnToken) return;
+      await speakAsync(p.th.replace(/\s+/g, ''), 'th-TH', 0.8); // Übersetzung (Thai)
+      if (token !== audioLearnToken) return;
+      await speakAsync(p.wordByWord, 'de-DE');                  // Wort-für-Wort
+      if (token !== audioLearnToken) return;
+      await audioSleep(900);                                    // kurze Lücke zum nächsten Wort
+    }
+
+    if (token === audioLearnToken) {
+      stopAudioLearn('✅ Alle ' + pool.length + ' Wörter vorgelesen.');
+    }
+  }
+
+  audioLearnBtn.addEventListener('click', () => {
+    if (audioLearnActive) stopAudioLearn(); else runAudioLearn();
+  });
+
+  // Bei Kategorie-Wechsel stoppen (die Auswahl passt sonst nicht mehr zum Vorgelesenen)
+  categoryFilter.addEventListener('change', () => {
+    if (audioLearnActive) stopAudioLearn();
   });
 
   // ==================== MY WORDS / EIGENE WÖRTER ====================
