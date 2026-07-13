@@ -464,6 +464,10 @@
   }
 
   function renderBrowseList(filterCat) {
+    if (filterCat === 'priority') {
+      renderPriorityList();
+      return;
+    }
     const cats = getCategories();
     let html = '';
     let count = 0;
@@ -510,6 +514,10 @@
 
     // Populate category filter
     if (categoryFilter.options.length <= 1) {
+      const prioOpt = document.createElement('option');
+      prioOpt.value = 'priority';
+      prioOpt.textContent = '⭐ Meine Lernliste';
+      categoryFilter.appendChild(prioOpt);
       for (const cat of cats.keys()) {
         const opt = document.createElement('option');
         opt.value = cat;
@@ -517,6 +525,96 @@
         categoryFilter.appendChild(opt);
       }
     }
+  }
+
+  // ---------- Lernliste in der Wortliste (mit Sortierung) ----------
+
+  let prioritySortMode = 'due'; // 'due' = wann wieder lernen, 'alpha' = alphabetisch
+
+  window.setPrioritySort = function (mode) {
+    prioritySortMode = mode;
+    renderPriorityList();
+  };
+
+  // Dringlichkeit: je öfter falsch und je seltener richtig, desto eher wieder lernen
+  function dueScore(st) {
+    return 1 + 3 * st.fail - st.ok;
+  }
+
+  function learnStatus(st) {
+    if (st.ok === 0 && st.fail === 0) return { badge: '🆕 noch nicht geübt', cls: 'new' };
+    if (st.ok - st.fail >= 2) return { badge: '✅ gut gelernt', cls: 'good' };
+    if (st.fail > st.ok) return { badge: '🔴 dringend wieder lernen', cls: 'urgent' };
+    return { badge: '🟡 weiter üben', cls: 'soon' };
+  }
+
+  function renderPriorityList() {
+    const user = AUTH.currentUser();
+    const keys = user ? AUTH.getUserPriorities(user) : [];
+    const progress = loadProgress();
+
+    const entries = allPhrases()
+      .filter(p => keys.includes(learnKey(p)))
+      .map(p => {
+        const st = progress[learnKey(p)] || { ok: 0, fail: 0 };
+        return { p, st, due: dueScore(st) };
+      });
+
+    searchInfo.textContent = entries.length + ' Wörter auf der Lernliste';
+
+    if (entries.length === 0) {
+      browseContainer.innerHTML =
+        '<div class="no-result">Ihre Lernliste ist noch leer.<br>' +
+        '<small>Wählen Sie eine Kategorie, tippen Sie ein Wort an und markieren Sie es mit "☆ Mit Priorität lernen".</small></div>';
+      return;
+    }
+
+    if (prioritySortMode === 'alpha') {
+      entries.sort((a, b) => a.p.de.localeCompare(b.p.de, 'de'));
+    } else {
+      // Dringendste zuerst; bei Gleichstand alphabetisch
+      entries.sort((a, b) => (b.due - a.due) || a.p.de.localeCompare(b.p.de, 'de'));
+    }
+
+    let html = `
+      <div class="priority-sort-row">
+        <label for="priority-sort">Sortieren:</label>
+        <select id="priority-sort" onchange="setPrioritySort(this.value)">
+          <option value="due"${prioritySortMode === 'due' ? ' selected' : ''}>Wann wieder lernen (dringendste zuerst)</option>
+          <option value="alpha"${prioritySortMode === 'alpha' ? ' selected' : ''}>Alphabetisch</option>
+        </select>
+      </div>
+    `;
+
+    for (const e of entries) {
+      const p = e.p;
+      const status = learnStatus(e.st);
+      const counts = (e.st.ok + e.st.fail) > 0
+        ? ' · ' + e.st.ok + '× richtig, ' + e.st.fail + '× falsch'
+        : '';
+      html += `
+        <div class="result-card">
+          <div class="learn-status ${status.cls}">${status.badge}${counts}</div>
+          <div class="result-row">
+            <span class="result-label">Deutsch:</span>
+            <span class="result-value">${escapeHtml(p.de)}</span>
+          </div>
+          <div class="result-row thai-row">
+            <span class="result-label">Thai:</span>
+            <span class="result-value thai-text">${escapeHtml(p.th)}</span>
+            <button class="audio-btn" onclick="playAudio('${escapeAttr(p.th)}')" title="Anhören" aria-label="Thai Audio abspielen">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+            </button>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Phonetik:</span>
+            <span class="result-value phonetic-text">${escapeHtml(p.phonetic)}</span>
+          </div>
+          ${priorityBtnHtml(p)}
+        </div>
+      `;
+    }
+    browseContainer.innerHTML = html;
   }
 
   // ==================== SUBSTRING SEARCH (all entries) ====================
@@ -682,6 +780,7 @@
             <span class="result-label">Wort-für-Wort:</span>
             <span class="result-value word-by-word">${escapeHtml(w.wordByWord)}</span>
           </div>
+          ${priorityBtnHtml(w)}
         </div>
       `;
     });
