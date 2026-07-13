@@ -491,7 +491,8 @@
   window.setCardSchedule = function (btn, origin, index, optId) {
     const user = AUTH.currentUser();
     if (!user) return;
-    const card = origin === 'result' ? lastRenderedResults[index] : currentCard;
+    const card = origin === 'result' ? lastRenderedResults[index] :
+      origin === 'due' ? dueListCards[index] : currentCard;
     if (!card) return;
     // Frisch erzeugte Übersetzungen (KI / Wort-für-Wort) gibt es weder im Wörterbuch
     // noch in "Meine Wörter" - erst dort speichern, sonst kann die Karte nie drankommen.
@@ -516,6 +517,36 @@
     btn.classList.add('active');
     box.querySelector('.schedule-status').textContent =
       scheduleStatusText(optId) + (autoSaved ? ' · zu "Meine Wörter" gespeichert' : '');
+    // In der Fällig-Übersicht: Bestätigung kurz zeigen, dann Liste aktualisieren
+    if (origin === 'due') setTimeout(renderDueOverview, 700);
+  };
+
+  // ==================== LAUTSCHRIFT EIN-/AUSBLENDEN ====================
+  // Globale Einstellung: blendet alle Zeilen mit der Klasse "phonetic-row" aus
+  // (Wortliste in allen Kategorien, Suche, Fällige-Karten-Übersicht).
+
+  const PHONETIC_KEY = 'thaiapp_show_phonetic';
+
+  function phoneticVisible() {
+    return localStorage.getItem(PHONETIC_KEY) !== '0';
+  }
+
+  function phoneticToggleLabel() {
+    return phoneticVisible() ? '🔤 Lautschrift ausblenden' : '🔤 Lautschrift einblenden';
+  }
+
+  function phoneticToggleBtnHtml() {
+    return '<button class="phonetic-toggle" onclick="togglePhonetic()">' + phoneticToggleLabel() + '</button>';
+  }
+
+  function applyPhoneticSetting() {
+    document.body.classList.toggle('hide-phonetic', !phoneticVisible());
+    document.querySelectorAll('.phonetic-toggle').forEach(b => { b.textContent = phoneticToggleLabel(); });
+  }
+
+  window.togglePhonetic = function () {
+    localStorage.setItem(PHONETIC_KEY, phoneticVisible() ? '0' : '1');
+    applyPhoneticSetting();
   };
 
   // ==================== BROWSE / WORTLISTE ====================
@@ -581,7 +612,7 @@
                   <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
                 </button>
               </div>
-              <div class="result-row">
+              <div class="result-row phonetic-row">
                 <span class="result-label">Phonetik:</span>
                 <span class="result-value phonetic-text">${escapeHtml(p.phonetic)}</span>
               </div>
@@ -658,7 +689,7 @@
               <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
             </button>
           </div>
-          <div class="result-row">
+          <div class="result-row phonetic-row">
             <span class="result-label">Phonetik:</span>
             <span class="result-value phonetic-text">${escapeHtml(p.phonetic)}</span>
           </div>
@@ -832,6 +863,8 @@
   let ignoreSchedule = false;
   // Zeitpunkt, zu dem die aktuelle Karte angezeigt wurde (für die Wiedervorlage)
   let currentCardShownAt = 0;
+  // Karten in der Fällig-Übersicht (Index-Zuordnung für die Wiedervorlage-Buttons)
+  let dueListCards = [];
 
   function learnKey(p) {
     return p.de + '|' + p.th;
@@ -966,6 +999,11 @@
     ignoreSchedule = false;
     populateLearnSources();
     buildLearnPool();
+    if (learnMode === 'due') {
+      updateLearnStats();
+      renderDueOverview();
+      return;
+    }
     if (learnPool.length === 0) {
       learnArea.innerHTML = learnSource.value === 'priority'
         ? '<div class="no-result">Ihre Lernliste ist noch leer.<br><small>Markieren Sie Wörter in der Wortliste mit "☆ Mit Priorität lernen".</small></div>'
@@ -1016,6 +1054,64 @@
     ignoreSchedule = true;
     if (learnMode === 'cards') renderFlashcard(); else renderQuiz();
   };
+
+  // ---------- Fällige-Karten-Übersicht ----------
+  // Zeigt alle gerade fälligen Karten (aus dem ganzen Bestand, unabhängig von
+  // der Kategorie-Auswahl), am längsten überfällige zuerst.
+
+  function renderDueOverview() {
+    const user = AUTH.currentUser();
+    const schedule = loadSchedule();
+    const now = Date.now();
+    const all = DICTIONARY.phrases.concat(user ? AUTH.getUserWords(user) : []);
+    dueListCards = all
+      .filter(p => cardAvailability(p, schedule, now) === 'due')
+      .sort((a, b) => (schedule[learnKey(a)].due || 0) - (schedule[learnKey(b)].due || 0));
+
+    let html = '<div class="due-header">' +
+      '<span class="due-count">⏰ ' + dueListCards.length + ' fällige Karte' + (dueListCards.length === 1 ? '' : 'n') + '</span>' +
+      phoneticToggleBtnHtml() +
+      '</div>' +
+      '<div class="due-hint">Alle fälligen Karten – unabhängig von der Kategorie-Auswahl oben.</div>';
+
+    if (dueListCards.length === 0) {
+      html += '<div class="no-result">🎉 Gerade ist keine Karte fällig.<br>' +
+        '<small>Planen Sie Karten über "⏰ Wieder lernen" auf Übersetzungs- und Lernkarten ein.</small></div>';
+      learnArea.innerHTML = html;
+      return;
+    }
+
+    dueListCards.forEach((p, idx) => {
+      const s = schedule[learnKey(p)];
+      const since = typeof s.due === 'number' ? formatDuration(now - s.due) : '';
+      html += `
+        <div class="result-card due-item">
+          ${since ? '<div class="due-since">fällig seit ' + escapeHtml(since) + '</div>' : ''}
+          <div class="result-row">
+            <span class="result-label">Deutsch:</span>
+            <span class="result-value">${escapeHtml(p.de)}</span>
+          </div>
+          <div class="result-row thai-row">
+            <span class="result-label">Thai:</span>
+            <span class="result-value thai-text">${escapeHtml(p.th)}</span>
+            <button class="audio-btn" onclick="playAudio('${escapeAttr(p.th)}')" title="Anhören" aria-label="Thai Audio abspielen">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+            </button>
+          </div>
+          <div class="result-row phonetic-row">
+            <span class="result-label">Phonetik:</span>
+            <span class="result-value phonetic-text">${escapeHtml(p.phonetic)}</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Wort-für-Wort:</span>
+            <span class="result-value word-by-word">${escapeHtml(p.wordByWord)}</span>
+          </div>
+          ${scheduleRowHtml(p, 'due', idx)}
+        </div>
+      `;
+    });
+    learnArea.innerHTML = html;
+  }
 
   // ---------- Flashcards ----------
 
@@ -1172,6 +1268,8 @@
   }
 
   // ==================== INIT ====================
+
+  applyPhoneticSetting();
 
   if (AUTH.currentUser()) {
     enterApp();
