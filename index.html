@@ -807,6 +807,56 @@
       margin-top: 0.75rem;
     }
 
+    /* ==================== LAUTSCHRIFT EIN-/AUSBLENDEN ==================== */
+    .phonetic-toggle {
+      padding: 0.4rem 0.8rem;
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      background: white;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-light);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    body.hide-phonetic .phonetic-row {
+      display: none !important;
+    }
+
+    .browse-tools {
+      margin-bottom: 0.75rem;
+    }
+
+    /* ==================== FÄLLIGE-KARTEN-ÜBERSICHT ==================== */
+    .due-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .due-count {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 0.95rem;
+    }
+
+    .due-hint {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-bottom: 0.75rem;
+    }
+
+    .due-since {
+      font-size: 0.72rem;
+      color: #c0392b;
+      font-weight: 600;
+      text-align: right;
+    }
+
     /* ==================== KI-ÜBERSETZUNG ==================== */
     .ai-settings {
       background: var(--card-bg);
@@ -1311,8 +1361,9 @@
           <option value="all">Alle Kategorien</option>
         </select>
         <div class="learn-modes">
-          <button class="mode-btn active" data-mode="cards">Karteikarten</button>
+          <button class="mode-btn active" data-mode="cards">Karten</button>
           <button class="mode-btn" data-mode="quiz">Quiz</button>
+          <button class="mode-btn" data-mode="due">⏰ Fällig</button>
           <button class="sound-toggle" id="sound-toggle" aria-label="Töne an/aus">🔊</button>
         </div>
       </div>
@@ -1337,6 +1388,9 @@
         <option value="all">Alle Kategorien</option>
       </select>
       <span id="search-info"></span>
+    </div>
+    <div class="browse-tools">
+      <button class="phonetic-toggle" onclick="togglePhonetic()"></button>
     </div>
     <div id="browse-list"></div>
   </section>
