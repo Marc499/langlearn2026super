@@ -721,6 +721,7 @@
     /* ==================== AUDIO-LERNEN ==================== */
     .audio-learn-row {
       display: flex;
+      flex-wrap: wrap;
       gap: 0.5rem;
       margin-bottom: 0.5rem;
     }
@@ -736,8 +737,13 @@
       background: #c0392b;
     }
 
+    #audio-learn-btn {
+      flex: 1 1 100%;
+    }
+
     #audio-learn-wait,
-    #audio-learn-repeat {
+    #audio-learn-repeat,
+    #audio-learn-gap {
       flex: 0 0 auto;
       padding: 0.5rem 0.4rem;
       border: 2px solid var(--border);
@@ -1497,6 +1503,13 @@
         <option value="2">2×</option>
         <option value="3">3×</option>
         <option value="5">5×</option>
+      </select>
+      <select id="audio-learn-gap" title="Lücke, bevor das nächste Wort beginnt">
+        <option value="1">1 s Lücke</option>
+        <option value="2">2 s Lücke</option>
+        <option value="3">3 s Lücke</option>
+        <option value="5">5 s Lücke</option>
+        <option value="10">10 s Lücke</option>
       </select>
     </div>
     <div id="audio-learn-status"></div>
