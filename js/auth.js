@@ -212,6 +212,30 @@ const AUTH = (function () {
 
   function resetUserProgress(username) {
     localStorage.removeItem(progressKey(username));
+    localStorage.removeItem(scheduleStorageKey(username));
+  }
+
+  // ==================== PER-USER WIEDERVORLAGE (SPACED REPETITION) ====================
+  // Wann eine Karte wieder gelernt werden soll. Gespeichert als Map
+  // Lern-Schlüssel ("de|th") -> { opt: 'now'|'m5'|'d1'|'w1'|'never', due: <ms>|null }.
+  // 'never' bedeutet: Karte kommt nicht mehr im Lernsystem dran.
+
+  function scheduleStorageKey(username) {
+    return 'thaiapp_schedule_' + username;
+  }
+
+  function getUserSchedule(username) {
+    try {
+      return JSON.parse(localStorage.getItem(scheduleStorageKey(username))) || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function setUserScheduleEntry(username, key, entry) {
+    const schedule = getUserSchedule(username);
+    if (entry === null) delete schedule[key]; else schedule[key] = entry;
+    localStorage.setItem(scheduleStorageKey(username), JSON.stringify(schedule));
   }
 
   // ==================== PER-USER PRIORITY LEARN LIST ====================
@@ -243,6 +267,7 @@ const AUTH = (function () {
     login, logout, currentUser, register, resetPassword, listUsers,
     getUserWords, addUserWord, deleteUserWord,
     getUserProgress, saveUserProgress, resetUserProgress,
-    getUserPriorities, toggleUserPriority
+    getUserPriorities, toggleUserPriority,
+    getUserSchedule, setUserScheduleEntry
   };
 })();

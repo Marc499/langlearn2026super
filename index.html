@@ -749,6 +749,64 @@
       margin-bottom: 0.7rem;
     }
 
+    /* ==================== WIEDERVORLAGE (WANN WIEDER LERNEN) ==================== */
+    .schedule-box {
+      margin-top: 0.7rem;
+      text-align: left;
+    }
+
+    .schedule-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-light);
+      margin-bottom: 0.35rem;
+    }
+
+    .schedule-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .schedule-btn {
+      padding: 0.35rem 0.65rem;
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      background: white;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .schedule-btn.active {
+      background: #eaf2f8;
+      border-color: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .schedule-btn.never.active {
+      background: #fdedec;
+      border-color: #c0392b;
+      color: #c0392b;
+    }
+
+    .schedule-status {
+      font-size: 0.75rem;
+      color: var(--success);
+      margin-top: 0.35rem;
+      min-height: 1em;
+    }
+
+    #learn-area .schedule-box {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 0.7rem 1rem 0.8rem;
+      margin-top: 0.75rem;
+    }
+
     /* ==================== KI-ÜBERSETZUNG ==================== */
     .ai-settings {
       background: var(--card-bg);
