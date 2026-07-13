@@ -213,6 +213,7 @@
   }
 
   let lastAiResult = null;
+  let lastRenderedResults = [];
 
   async function translate() {
     const query = inputField.value.trim();
@@ -278,8 +279,9 @@
   }
 
   function renderResults(results) {
+    lastRenderedResults = results;
     let html = '';
-    for (const r of results) {
+    results.forEach((r, idx) => {
       let matchLabel = r.matchType === 'ai' ? '🤖 KI-Übersetzung (' + AI_TRANSLATE.providerName() + ')' :
         r.matchType === 'exact' ? 'Exakter Treffer' :
         r.matchType === 'partial' ? 'Ähnlicher Treffer' :
@@ -316,11 +318,12 @@
             <span class="result-label">Wort-für-Wort (DE):</span>
             <span class="result-value word-by-word">${escapeHtml(r.wordByWord)}</span>
           </div>
+          ${scheduleRowHtml(r, 'result', idx)}
           ${r.matchType === 'ai' ? `
           <button class="btn btn-secondary save-ai-btn" onclick="saveAiWord(this)">💾 Zu meinen Wörtern</button>` : ''}
         </div>
       `;
-    }
+    });
     resultsContainer.innerHTML = html;
   }
 
@@ -328,7 +331,8 @@
   window.saveAiWord = function (btn) {
     const user = AUTH.currentUser();
     if (!user || !lastAiResult) return;
-    AUTH.addUserWord(user, lastAiResult);
+    // Nicht doppelt anlegen, falls die Wiedervorlage-Auswahl schon gespeichert hat
+    if (!entryExistsInLearnPool(lastAiResult)) AUTH.addUserWord(user, lastAiResult);
     renderMyWords();
     btn.textContent = '✓ Gespeichert';
     btn.disabled = true;
@@ -424,6 +428,94 @@
     const nowActive = AUTH.toggleUserPriority(user, btn.dataset.key);
     btn.classList.toggle('active', nowActive);
     btn.textContent = nowActive ? '⭐ Auf der Lernliste' : '☆ Mit Priorität lernen';
+  };
+
+  // ==================== WIEDERVORLAGE (WANN WIEDER LERNEN) ====================
+  // Der Nutzer legt pro Karte fest, wann sie wieder drankommen soll -
+  // direkt bei einer frisch erzeugten Übersetzung und auf jeder Lernkarte.
+
+  const SCHEDULE_OPTIONS = [
+    { id: 'now', label: 'Sofort', ms: 0 },
+    { id: 'm5', label: '5 Min', ms: 5 * 60 * 1000 },
+    { id: 'd1', label: '1 Tag', ms: 24 * 60 * 60 * 1000 },
+    { id: 'w1', label: '1 Woche', ms: 7 * 24 * 60 * 60 * 1000 },
+    { id: 'never', label: 'Gar nicht', ms: null }
+  ];
+
+  function loadSchedule() {
+    const user = AUTH.currentUser();
+    return user ? AUTH.getUserSchedule(user) : {};
+  }
+
+  function scheduleStatusText(optId) {
+    switch (optId) {
+      case 'now': return '⏰ Wiederholung: sofort';
+      case 'm5': return '⏰ Wiederholung: in 5 Minuten';
+      case 'd1': return '⏰ Wiederholung: in 1 Tag';
+      case 'w1': return '⏰ Wiederholung: in 1 Woche';
+      case 'never': return '🚫 Kommt nicht mehr im Lernsystem dran';
+      default: return '';
+    }
+  }
+
+  // 'normal' = kein Termin, 'due' = fällig, 'later' = für später geplant, 'never' = ausgeschlossen
+  function cardAvailability(p, schedule, now) {
+    const s = schedule[learnKey(p)];
+    if (!s) return 'normal';
+    if (s.opt === 'never') return 'never';
+    if (typeof s.due === 'number' && s.due > now) return 'later';
+    return 'due';
+  }
+
+  // origin 'result': Übersetzungskarte (index in lastRenderedResults), origin 'card': aktuelle Lernkarte
+  function scheduleRowHtml(p, origin, index) {
+    const sched = loadSchedule()[learnKey(p)];
+    const activeOpt = sched ? sched.opt : null;
+    let html = '<div class="schedule-box"><div class="schedule-label">⏰ Wieder lernen:</div><div class="schedule-row">';
+    for (const o of SCHEDULE_OPTIONS) {
+      html += '<button class="schedule-btn' + (activeOpt === o.id ? ' active' : '') + (o.id === 'never' ? ' never' : '') + '" ' +
+        'onclick="event.stopPropagation(); setCardSchedule(this, \'' + origin + '\', ' + index + ', \'' + o.id + '\')">' +
+        o.label + '</button>';
+    }
+    html += '</div><div class="schedule-status">' + (activeOpt ? escapeHtml(scheduleStatusText(activeOpt)) : '') + '</div></div>';
+    return html;
+  }
+
+  function entryExistsInLearnPool(card) {
+    const key = learnKey(card);
+    const user = AUTH.currentUser();
+    const userWords = user ? AUTH.getUserWords(user) : [];
+    return DICTIONARY.phrases.concat(userWords).some(p => learnKey(p) === key);
+  }
+
+  window.setCardSchedule = function (btn, origin, index, optId) {
+    const user = AUTH.currentUser();
+    if (!user) return;
+    const card = origin === 'result' ? lastRenderedResults[index] : currentCard;
+    if (!card) return;
+    // Frisch erzeugte Übersetzungen (KI / Wort-für-Wort) gibt es weder im Wörterbuch
+    // noch in "Meine Wörter" - erst dort speichern, sonst kann die Karte nie drankommen.
+    let autoSaved = false;
+    if (optId !== 'never' && !entryExistsInLearnPool(card)) {
+      AUTH.addUserWord(user, {
+        de: card.de,
+        en: card.en || card.de,
+        th: card.th,
+        phonetic: card.phonetic || '-',
+        wordByWord: card.wordByWord || card.de
+      });
+      renderMyWords();
+      autoSaved = true;
+    }
+    const opt = SCHEDULE_OPTIONS.find(o => o.id === optId);
+    const entry = optId === 'never' ? { opt: 'never', due: null } : { opt: optId, due: Date.now() + opt.ms };
+    AUTH.setUserScheduleEntry(user, learnKey(card), entry);
+
+    const box = btn.closest('.schedule-box');
+    box.querySelectorAll('.schedule-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    box.querySelector('.schedule-status').textContent =
+      scheduleStatusText(optId) + (autoSaved ? ' · zu "Meine Wörter" gespeichert' : '');
   };
 
   // ==================== BROWSE / WORTLISTE ====================
@@ -736,6 +828,10 @@
   let currentCard = null;
   let lastCardKey = null;
   let quizScore = { right: 0, total: 0 };
+  // "Trotzdem üben": Wiedervorlage-Wartezeiten für diese Lernrunde ignorieren
+  let ignoreSchedule = false;
+  // Zeitpunkt, zu dem die aktuelle Karte angezeigt wurde (für die Wiedervorlage)
+  let currentCardShownAt = 0;
 
   function learnKey(p) {
     return p.de + '|' + p.th;
@@ -757,6 +853,16 @@
     if (!progress[key]) progress[key] = { ok: 0, fail: 0 };
     if (ok) progress[key].ok++; else progress[key].fail++;
     saveProgress(progress);
+    // Eine fällige Wiedervorlage ist mit dieser Antwort erledigt. Nur Termine
+    // löschen, die schon beim Anzeigen der Karte fällig waren - eine gerade
+    // erst auf der Karte gewählte Zeit (z.B. "Sofort") soll bestehen bleiben.
+    const user = AUTH.currentUser();
+    if (user) {
+      const s = AUTH.getUserSchedule(user)[key];
+      if (s && s.opt !== 'never' && typeof s.due === 'number' && s.due <= currentCardShownAt) {
+        AUTH.setUserScheduleEntry(user, key, null);
+      }
+    }
   }
 
   function populateLearnSources() {
@@ -801,17 +907,27 @@
 
   // Difficult words (more failures) get a higher weight and appear more often;
   // words on the priority learn list are boosted strongly on top of that.
+  // Die Wiedervorlage filtert zusätzlich: "Gar nicht" fliegt raus, für später
+  // geplante Karten warten, fällige Karten werden stark bevorzugt.
   function pickCard() {
     if (learnPool.length === 0) return null;
+    const schedule = loadSchedule();
+    const now = Date.now();
+    let pool = learnPool.filter(p => cardAvailability(p, schedule, now) !== 'never');
+    if (!ignoreSchedule) {
+      pool = pool.filter(p => cardAvailability(p, schedule, now) !== 'later');
+    }
+    if (pool.length === 0) return null;
     const progress = loadProgress();
     const user = AUTH.currentUser();
     const prioKeys = new Set(user ? AUTH.getUserPriorities(user) : []);
     const weighted = [];
-    for (const p of learnPool) {
+    for (const p of pool) {
       const key = learnKey(p);
       const st = progress[key] || { ok: 0, fail: 0 };
       let w = Math.max(1, 1 + 3 * st.fail - st.ok);
       if (prioKeys.has(key)) w *= 6;
+      if (cardAvailability(p, schedule, now) === 'due') w *= 8;
       weighted.push({ p, w });
     }
     let candidates = weighted;
@@ -830,12 +946,16 @@
 
   function updateLearnStats() {
     const progress = loadProgress();
-    let learned = 0;
+    const schedule = loadSchedule();
+    const now = Date.now();
+    let learned = 0, due = 0;
     for (const p of learnPool) {
       const st = progress[learnKey(p)];
       if (st && st.ok - st.fail >= 2) learned++;
+      if (cardAvailability(p, schedule, now) === 'due') due++;
     }
     let text = learned + ' von ' + learnPool.length + ' gelernt';
+    if (due > 0) text += ' · ⏰ ' + due + ' fällig';
     if (learnMode === 'quiz' && quizScore.total > 0) {
       text += ' · Quiz: ' + quizScore.right + '/' + quizScore.total + ' richtig';
     }
@@ -843,6 +963,7 @@
   }
 
   function learnRefresh() {
+    ignoreSchedule = false;
     populateLearnSources();
     buildLearnPool();
     if (learnPool.length === 0) {
@@ -856,10 +977,52 @@
     if (learnMode === 'cards') renderFlashcard(); else renderQuiz();
   }
 
+  // Nächster Wiedervorlage-Termin in der aktuellen Auswahl (oder null)
+  function nextDueTime() {
+    const schedule = loadSchedule();
+    const now = Date.now();
+    let next = null;
+    for (const p of learnPool) {
+      const s = schedule[learnKey(p)];
+      if (s && s.opt !== 'never' && typeof s.due === 'number' && s.due > now) {
+        if (next === null || s.due < next) next = s.due;
+      }
+    }
+    return next;
+  }
+
+  function formatDuration(ms) {
+    const min = Math.round(ms / 60000);
+    if (min < 1) return 'unter einer Minute';
+    if (min < 60) return min + ' Minute' + (min === 1 ? '' : 'n');
+    const h = Math.round(min / 60);
+    if (h < 24) return h + ' Stunde' + (h === 1 ? '' : 'n');
+    const d = Math.round(h / 24);
+    return d + ' Tag' + (d === 1 ? '' : 'en');
+  }
+
+  // Alle Karten sind für später geplant oder auf "Gar nicht" gestellt
+  function renderNoDueCard() {
+    const next = nextDueTime();
+    learnArea.innerHTML = next === null
+      ? '<div class="no-result">Alle Karten dieser Auswahl sind auf "Gar nicht" gestellt.<br>' +
+        '<small>Wählen Sie eine andere Auswahl oder ändern Sie die Wiedervorlage der Karten.</small></div>'
+      : '<div class="no-result">🎉 Gerade ist nichts fällig!<br>' +
+        '<small>Die nächste Karte kommt in ' + escapeHtml(formatDuration(next - Date.now())) + ' wieder dran.</small><br>' +
+        '<button class="btn btn-secondary" style="margin-top:0.8rem" onclick="practiceAnyway()">Trotzdem üben</button></div>';
+  }
+
+  window.practiceAnyway = function () {
+    ignoreSchedule = true;
+    if (learnMode === 'cards') renderFlashcard(); else renderQuiz();
+  };
+
   // ---------- Flashcards ----------
 
   function renderFlashcard() {
     currentCard = pickCard();
+    if (!currentCard) { renderNoDueCard(); return; }
+    currentCardShownAt = Date.now();
     const c = currentCard;
     learnArea.innerHTML = `
       <div class="flashcard" id="fc" onclick="flipCard()">
@@ -891,6 +1054,7 @@
         <button class="btn btn-know" onclick="answerCard(true)">✓ Gewusst</button>
         <button class="btn btn-dontknow" onclick="answerCard(false)">✗ Nicht gewusst</button>
       </div>
+      ${scheduleRowHtml(c, 'card', 0)}
     `;
   };
 
@@ -905,6 +1069,8 @@
 
   function renderQuiz() {
     currentCard = pickCard();
+    if (!currentCard) { renderNoDueCard(); return; }
+    currentCardShownAt = Date.now();
     const c = currentCard;
 
     // Distractors: 3 other entries; fall back to the whole dictionary if the pool is small
