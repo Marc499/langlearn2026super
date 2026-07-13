@@ -736,9 +736,10 @@
       background: #c0392b;
     }
 
-    #audio-learn-wait {
-      flex: 0 0 110px;
-      padding: 0.5rem 0.6rem;
+    #audio-learn-wait,
+    #audio-learn-repeat {
+      flex: 0 0 auto;
+      padding: 0.5rem 0.4rem;
       border: 2px solid var(--border);
       border-radius: 8px;
       font-size: 0.85rem;
@@ -1490,6 +1491,12 @@
         <option value="3">3 s Pause</option>
         <option value="5">5 s Pause</option>
         <option value="8">8 s Pause</option>
+      </select>
+      <select id="audio-learn-repeat" title="Wie oft jedes Wort wiederholt wird">
+        <option value="1">1×</option>
+        <option value="2">2×</option>
+        <option value="3">3×</option>
+        <option value="5">5×</option>
       </select>
     </div>
     <div id="audio-learn-status"></div>
