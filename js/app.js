@@ -1006,27 +1006,29 @@
     audioLearnBtn.classList.add('playing');
     window.speechSynthesis.cancel();
 
-    const waitMs = (parseInt(audioLearnWait.value, 10) || 3) * 1000;
-    const repeats = parseInt(audioLearnRepeat.value, 10) || 1;
-    const gapMs = (parseInt(audioLearnGap.value, 10) || 1) * 1000;
-
     for (let i = 0; i < pool.length; i++) {
       const p = pool[i];
 
+      // Einstellungen bei jedem Wort neu lesen, damit Änderungen an Pause,
+      // Wiederholungen und Lücke auch während der laufenden Wiedergabe greifen
+      let repeats = parseInt(audioLearnRepeat.value, 10) || 1;
+
       for (let r = 1; r <= repeats; r++) {
+        repeats = parseInt(audioLearnRepeat.value, 10) || 1;
         if (token !== audioLearnToken) return;
         audioLearnStatus.textContent = '🎧 ' + (i + 1) + '/' + pool.length +
           (repeats > 1 ? ' (' + r + '/' + repeats + ')' : '') + ': ' + p.de;
 
         await speakAsync(p.de, 'de-DE');                          // Quelle (Deutsch)
         if (token !== audioLearnToken) return;
-        await audioSleep(waitMs);                                 // Denkpause
+        await audioSleep((parseInt(audioLearnWait.value, 10) || 3) * 1000); // Denkpause
         if (token !== audioLearnToken) return;
         await speakAsync(p.th.replace(/\s+/g, ''), 'th-TH', 0.8); // Übersetzung (Thai)
         if (token !== audioLearnToken) return;
         await speakAsync(p.wordByWord, 'de-DE');                  // Wort-für-Wort
         if (token !== audioLearnToken) return;
-        await audioSleep(r < repeats ? 600 : gapMs);              // Lücke zur Wiederholung / zum nächsten Wort
+        // Lücke zur Wiederholung bzw. zum nächsten Wort
+        await audioSleep(r < repeats ? 600 : (parseInt(audioLearnGap.value, 10) || 1) * 1000);
       }
     }
 
