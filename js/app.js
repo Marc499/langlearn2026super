@@ -678,16 +678,34 @@
     return { badge: '🟡 weiter üben', cls: 'soon' };
   }
 
+  // Restzeit bis zu einem Wiedervorlage-Zeitpunkt lesbar machen
+  function dueInText(msRemaining) {
+    const min = Math.round(msRemaining / 60000);
+    if (min < 1) return 'gleich';
+    if (min < 60) return 'in ' + min + ' Min';
+    const h = Math.round(min / 60);
+    if (h < 24) return 'in ' + h + ' Std';
+    const d = Math.round(h / 24);
+    return d === 1 ? 'morgen' : 'in ' + d + ' Tagen';
+  }
+
   function renderPriorityList() {
     const user = AUTH.currentUser();
     const keys = user ? AUTH.getUserPriorities(user) : [];
     const progress = loadProgress();
+    const schedule = loadSchedule();
+    const now = Date.now();
 
     const entries = allPhrases()
       .filter(p => keys.includes(learnKey(p)))
       .map(p => {
         const st = progress[learnKey(p)] || { ok: 0, fail: 0 };
-        return { p, st, due: dueScore(st) };
+        return {
+          p, st,
+          due: dueScore(st),
+          avail: cardAvailability(p, schedule, now),
+          sched: schedule[learnKey(p)] || null
+        };
       });
 
     searchInfo.textContent = entries.length + ' Wörter auf der Lernliste';
@@ -702,8 +720,17 @@
     if (prioritySortMode === 'alpha') {
       entries.sort((a, b) => a.p.de.localeCompare(b.p.de, 'de'));
     } else {
-      // Dringendste zuerst; bei Gleichstand alphabetisch
-      entries.sort((a, b) => (b.due - a.due) || a.p.de.localeCompare(b.p.de, 'de'));
+      // Gruppen: (0) fällige Wiedervorlage-Termine, (1) ohne Termin nach
+      // Schwierigkeit, (2) für später geplant nach Termin, (3) ausgeschlossen
+      const groupOf = { due: 0, normal: 1, later: 2, never: 3 };
+      entries.sort((a, b) => {
+        const ga = groupOf[a.avail], gb = groupOf[b.avail];
+        if (ga !== gb) return ga - gb;
+        if (ga === 0 || ga === 2) {
+          return (a.sched.due - b.sched.due) || a.p.de.localeCompare(b.p.de, 'de');
+        }
+        return (b.due - a.due) || a.p.de.localeCompare(b.p.de, 'de');
+      });
     }
 
     let html = `
@@ -716,15 +743,20 @@
       </div>
     `;
 
+    browseCards = [];
     for (const e of entries) {
       const p = e.p;
+      browseCards.push(p);
       const status = learnStatus(e.st);
       const counts = (e.st.ok + e.st.fail) > 0
         ? ' · ' + e.st.ok + '× richtig, ' + e.st.fail + '× falsch'
         : '';
+      const schedBadge = e.avail === 'due' ? '<div class="learn-status urgent">🔴 Jetzt fällig</div> ' :
+        e.avail === 'later' ? '<div class="learn-status new">📅 Wieder ' + dueInText(e.sched.due - now) + '</div> ' :
+        e.avail === 'never' ? '<div class="learn-status">🚫 Vom Lernen ausgeschlossen</div> ' : '';
       html += `
         <div class="result-card">
-          <div class="learn-status ${status.cls}">${status.badge}${counts}</div>
+          ${schedBadge}<div class="learn-status ${status.cls}">${status.badge}${counts}</div>
           <div class="result-row">
             <span class="result-label">Deutsch:</span>
             <span class="result-value">${escapeHtml(p.de)}</span>
@@ -736,11 +768,12 @@
               <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
             </button>
           </div>
-          <div class="result-row">
+          <div class="result-row phonetic-row">
             <span class="result-label">Phonetik:</span>
             <span class="result-value phonetic-text">${escapeHtml(p.phonetic)}</span>
           </div>
           ${priorityBtnHtml(p)}
+          ${scheduleRowHtml(p, 'browse', browseCards.length - 1)}
         </div>
       `;
     }
