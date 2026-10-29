@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<!-- chinesisch/index.html (GitHub Pages) | 20261029:1700 Basis ChinesischLernen_v4.html; GEÄNDERT: Hinweistext not-allowed
+<!-- chinesisch/index.html (GitHub Pages) | 20261029:1710 NEU: Funktion heardHTML() – erkannter Satz mit Pinyin darunter, falsche/fehlende Zeichen rot
+     chinesisch/index.html (GitHub Pages) | 20261029:1700 Basis ChinesischLernen_v4.html; GEÄNDERT: Hinweistext not-allowed
      ChinesischLernen_v4.html | 20261029:1640 Basis v3; GEÄNDERT: listen() mit festem Sprechfenster, Neustart bei vorzeitigem Ende, Fehlercodes werden angesagt -->
 <html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Chinesisch lernen – Mandarin v4</title>
@@ -23,6 +24,12 @@ button.rec{background:#b91c1c}button.st{background:#475569}
 #bar div{height:100%;background:#f87171;width:0%}
 #dbg{font-size:12px;color:#64748b;margin-top:6px}
 .res{margin-top:8px;font-size:15px}
+.cmp{display:grid;gap:6px;margin-top:8px}/* 20261029:1710 NEU Vergleichsanzeige */
+.cmp .lbl{font-size:12px;color:#94a3b8}/* 20261029:1710 */
+.row{display:flex;flex-wrap:wrap;gap:4px}/* 20261029:1710 */
+.ch{display:flex;flex-direction:column;align-items:center;min-width:1.6em;padding:2px 3px;border-radius:6px}/* 20261029:1710 */
+.ch .h{font-size:26px;line-height:1.2}.ch .y{font-size:12px;color:#38bdf8}/* 20261029:1710 */
+.ch.bad{background:#7f1d1d}.ch.bad .y{color:#fecaca}/* 20261029:1710 falsches/fehlendes Zeichen */
 </style></head><body><div class="wrap">
 <h1>Chinesisch · Mandarin</h1>
 <div id="voice">Stimmen werden gesucht…</div>
@@ -36,6 +43,7 @@ button.rec{background:#b91c1c}button.st{background:#475569}
 <div id="bar"><div></div></div><!-- 20261029:1640 NEU Fortschrittsbalken Sprechzeit -->
 <div id="dbg"></div><!-- 20261029:1640 NEU Diagnosezeile -->
 <div id="list"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.26.0/dist/index.js"></script><!-- 20261029:1710 NEU Pinyin für erkannten Text -->
 <script>
 // Sätze – hier neue ergänzen | 20261029:0950
 const phrases=[
@@ -68,6 +76,13 @@ function panel(h,mic){const p=document.getElementById("panel");p.innerHTML=h;p.c
 function dbg(t){document.getElementById("dbg").textContent=t}
 function clean(s){return s.replace(/[。，！？、\s.,!?]/g,"")}
 function score(heard,target){const a=clean(heard),b=clean(target);if(!b.length)return 0;let hit=0;for(const ch of b)if(a.includes(ch))hit++;return Math.round(hit/b.length*100)}
+// 20261029:1710 NEU Funktion heardHTML(): erkannter Satz + Zielsatz je Zeichen mit Pinyin, Abweichungen rot
+function pyArr(t){try{return pinyinPro.pinyin(t,{type:"array"})}catch(e){return [...t].map(()=>"")}} // 20261029:1710 ohne Bibliothek: leeres Pinyin
+function rowHTML(t,other){const ch=[...clean(t)],py=pyArr(clean(t)),o=clean(other); // 20261029:1710
+return '<div class="row">'+ch.map((c,i)=>'<div class="ch'+(o.includes(c)?'':' bad')+'"><span class="h">'+c+'</span><span class="y">'+(py[i]||'')+'</span></div>').join('')+'</div>'} // 20261029:1710
+function heardHTML(txt,p){if(!txt)return ""; // 20261029:1710
+return '<div class="cmp"><div class="lbl">Du hast gesagt (rot = passt nicht):</div>'+rowHTML(txt,p.zh)+ // 20261029:1710
+'<div class="lbl">Richtig wäre (rot = fehlte bei dir):</div>'+rowHTML(p.zh,txt)+'</div>'} // 20261029:1710
 // 20261029:1640 NEU: verständliche deutsche Fehlermeldungen
 const ERR={"not-allowed":"Das Mikrofon ist blockiert. Bitte links neben der Adresse auf das Symbol tippen, dann Berechtigungen, und das Mikrofon erlauben." /* 20261029:1700 GEÄNDERT */,
 "service-not-allowed":"Die Spracherkennung ist blockiert. Bitte die Datei in Chrome öffnen und das Mikrofon erlauben.",
@@ -98,13 +113,13 @@ start()})}
 // 20261029:1640 GEÄNDERT Funktion record(): Fehlermeldung anzeigen
 async function record(id){const p=phrases.find(x=>x.id===id);const out=document.getElementById("r"+id);out.textContent="🎙 Sprich jetzt…";
 await beep();await wait(0.3);const {txt,best,err}=await listen(p);await beep(440,0.15);
-out.innerHTML=best<0?"Spracherkennung nur in Chrome.":err?ERR[err]:"Erkannt: <b>"+(txt||"–")+"</b> – Treffer: <b>"+best+"%</b> "+(best===100?"👑":best>=70?"❤️":"🔁")}
+out.innerHTML=best<0?"Spracherkennung nur in Chrome.":err?ERR[err]:"Treffer: <b>"+best+"%</b> "+(best===100?"👑":best>=70?"❤️":"🔁")+(txt?heardHTML(txt,p):" – nichts gehört")} // 20261029:1710 GEÄNDERT Funktion record(): Pinyin-Vergleich
 // 20261029:1640 NEU Funktion micTest(): einmal Mikrofon + Erkennung prüfen
 async function micTest(){panel("🎤 Sag nach dem Ton auf Chinesisch: 你好 (nǐ hǎo)",true);await de("Sag nach dem Ton: ni hao.");
 await beep();await wait(0.3);const r=await listen({zh:"你好"});await beep(440,0.15);
 if(r.best<0){panel("Spracherkennung nur in Chrome.");return}
 if(r.err){panel("⚠ "+ERR[r.err]);await de(ERR[r.err]);return}
-panel(r.txt?"✅ Mikrofon funktioniert. Erkannt: "+r.txt:"🔇 Nichts gehört – Mikrofon prüfen.");await de(r.txt?"Das Mikrofon funktioniert.":"Ich habe nichts gehört.")}
+panel(r.txt?"✅ Mikrofon funktioniert."+heardHTML(r.txt,{zh:"你好"}): /* 20261029:1710 GEÄNDERT Funktion micTest() */"🔇 Nichts gehört – Mikrofon prüfen.");await de(r.txt?"Das Mikrofon funktioniert.":"Ich habe nichts gehört.")}
 // 20261029:1640 GEÄNDERT Funktion toggleGuide(): kurze Pause nach Ton, Fehler ansagen, Stopp beendet auch das Zuhören
 async function toggleGuide(){const b=document.getElementById("guide");
 if(running){running=false;speechSynthesis.cancel();if(stopListen)stopListen();b.textContent="▶ Geführt üben";b.className="";panel("Gestoppt.");return}
@@ -124,10 +139,11 @@ panel("🎙 SPRICH JETZT: <b>"+p.zh+"</b> ("+p.py+") – Versuch "+t+"/"+MAX_TRI
 await beep();await wait(0.3);const {txt,best,err}=await listen(p);await beep(440,0.15);if(!running)break;
 if(best<0){panel("Spracherkennung nur in Chrome verfügbar.");await de("Die Spracherkennung funktioniert nur in Chrome.");running=false;break}
 if(err){panel("⚠ "+ERR[err]);await de(ERR[err]);running=false;break}
-if(best>=T()){panel("✅ Erkannt: "+txt+" – "+best+"% "+(best===100?"👑":"❤️"));
+if(best>=T()){panel("✅ "+best+"% "+(best===100?"👑":"❤️")+heardHTML(txt,p)); // 20261029:1710 GEÄNDERT Funktion toggleGuide(): Pinyin-Vergleich
 await de(best===100?"Perfekt! Hundert Prozent.":"Gut gemacht! "+best+" Prozent.");ok=true;break}
 if(!txt){panel("🔇 Nichts gehört.");await de("Ich habe nichts gehört.")}
-else{panel("🔁 Erkannt: "+txt+" – "+best+"%");await de("Noch nicht ganz. "+best+" Prozent.")}
+else{panel("🔁 "+best+"%"+heardHTML(txt,p)); // 20261029:1710 GEÄNDERT Funktion toggleGuide()
+await de("Noch nicht ganz. "+best+" Prozent.")}
 if(!running)break;
 if(t<MAX_TRIES){await de("Hör noch einmal zu.");await playZh(p,false);if(!running)break;
 panel("⏳ Kurze Pause… ("+P2()+" s)");await wait(P2())}
