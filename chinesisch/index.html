@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<!-- chinesisch/index.html (GitHub Pages) | 20261029:1700 Basis ChinesischLernen_v4.html; GEÄNDERT: Hinweistext not-allowed
+     ChinesischLernen_v4.html | 20261029:1640 Basis v3; GEÄNDERT: listen() mit festem Sprechfenster, Neustart bei vorzeitigem Ende, Fehlercodes werden angesagt -->
+<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chinesisch lernen – Mandarin v4</title>
+<style>
+body{font-family:system-ui,Arial,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:20px}
+.wrap{max-width:720px;margin:auto}
+h1{margin:0 0 4px;color:#f8fafc}#voice{font-size:13px;margin-bottom:12px}
+.ok{color:#4ade80}.warn{color:#fbbf24}
+.card{background:#1e293b;border-radius:12px;padding:16px;margin:12px 0;border-left:6px solid #94a3b8}
+.card.LEARNING{border-color:#f59e0b}.card.LEARNED{border-color:#22c55e}.card.active{outline:3px solid #38bdf8}
+.de{font-size:15px;color:#94a3b8}.zh{font-size:34px;margin:6px 0;cursor:pointer}.py{font-size:20px;color:#38bdf8}
+.words{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}
+.w{background:#0f172a;border-radius:8px;padding:6px 10px;text-align:center;cursor:pointer}
+.w .c{font-size:22px}.w .p{font-size:13px;color:#38bdf8}.w .g{font-size:12px;color:#cbd5e1}
+button{background:#0369a1;color:#fff;border:0;border-radius:8px;padding:8px 12px;margin:4px 4px 0 0;cursor:pointer;font-size:14px}
+button.rec{background:#b91c1c}button.st{background:#475569}
+#guide{background:#16a34a;font-size:18px;padding:12px 18px}#guide.run{background:#b91c1c}
+#panel{background:#1e293b;border-radius:12px;padding:14px;margin:12px 0;font-size:18px;min-height:28px}
+#panel.mic{background:#7f1d1d}
+#bar{height:8px;background:#334155;border-radius:4px;margin-top:8px;overflow:hidden;display:none}
+#bar div{height:100%;background:#f87171;width:0%}
+#dbg{font-size:12px;color:#64748b;margin-top:6px}
+.res{margin-top:8px;font-size:15px}
+</style></head><body><div class="wrap">
+<h1>Chinesisch · Mandarin</h1>
+<div id="voice">Stimmen werden gesucht…</div>
+<label>Tempo: <input type="range" id="rate" min="0.4" max="1.2" step="0.1" value="0.8"> <span id="rv">0.8</span></label>
+<label style="margin-left:14px">Pause (s): <input type="number" id="pause" min="2" max="30" value="10" style="width:50px"></label>
+<label style="margin-left:14px">Pause nach Versuch (s): <input type="number" id="pause2" min="1" max="15" value="4" style="width:50px"></label>
+<label style="margin-left:14px">Sprechzeit (s): <input type="number" id="win" min="3" max="20" value="7" style="width:50px"></label><!-- 20261029:1640 NEU -->
+<label style="margin-left:14px">Schwelle %: <input type="number" id="thr" min="30" max="100" value="70" style="width:55px"></label>
+<div><button id="guide" onclick="toggleGuide()">▶ Geführt üben</button> <button class="st" onclick="micTest()">🎤 Mikrofon testen</button></div><!-- 20261029:1640 NEU Mikrofontest -->
+<div id="panel">Drücke „Geführt üben“. Alle Ansagen kommen gesprochen – du musst nichts lesen.</div>
+<div id="bar"><div></div></div><!-- 20261029:1640 NEU Fortschrittsbalken Sprechzeit -->
+<div id="dbg"></div><!-- 20261029:1640 NEU Diagnosezeile -->
+<div id="list"></div></div>
+<script>
+// Sätze – hier neue ergänzen | 20261029:0950
+const phrases=[
+{id:1,de:"Hallo",zh:"你好",py:"nǐ hǎo",w:[["你","nǐ","du"],["好","hǎo","gut"]]},
+{id:2,de:"Ich bin sehr glücklich.",zh:"我很高兴。",py:"wǒ hěn gāoxìng",w:[["我","wǒ","ich"],["很","hěn","sehr"],["高兴","gāoxìng","froh, glücklich"]]},
+{id:3,de:"Ich freue mich, dich kennenzulernen.",zh:"很高兴认识你。",py:"hěn gāoxìng rènshi nǐ",w:[["很","hěn","sehr"],["高兴","gāoxìng","froh"],["认识","rènshi","kennenlernen"],["你","nǐ","dich"]]},
+{id:4,de:"Du hast eine sehr schöne Wohnung.",zh:"你家很漂亮。",py:"nǐ jiā hěn piàoliang",w:[["你","nǐ","dein"],["家","jiā","Zuhause, Wohnung"],["很","hěn","sehr"],["漂亮","piàoliang","schön"]]},
+{id:5,de:"Vielen Dank für die große Gastfreundschaft.",zh:"非常感谢你的热情款待。",py:"fēicháng gǎnxiè nǐ de rèqíng kuǎndài",w:[["非常","fēicháng","sehr, vielen"],["感谢","gǎnxiè","danken"],["你的","nǐ de","deine"],["热情","rèqíng","herzlich"],["款待","kuǎndài","Bewirtung"]]}
+];
+const MAX_TRIES=3;
+const ST={NONE:"Noch zu lernen",LEARNING:"Lernen",LEARNED:"Gelernt"},CY={NONE:"LEARNING",LEARNING:"LEARNED",LEARNED:"NONE"};
+let status={};try{status=JSON.parse(localStorage.getItem("zhStatus")||"{}")}catch(e){}
+let zhVoice=null,deVoice=null,running=false,curRec=null,actx=null,stopListen=null;
+function findVoice(){const all=speechSynthesis.getVoices();
+const zh=all.filter(x=>/zh[-_]CN/i.test(x.lang)||/普通话|Mandarin/i.test(x.name));zhVoice=zh.find(x=>/Google/.test(x.name))||zh[0]||null;
+const de=all.filter(x=>/^de/i.test(x.lang));deVoice=de.find(x=>/Google/.test(x.name))||de[0]||null;
+const el=document.getElementById("voice");el.className=zhVoice?"ok":"warn";
+el.textContent=(zhVoice?"✓ Chinesisch: "+zhVoice.name:"⚠ Keine chinesische Stimme – bitte Chrome nutzen")+" | "+(deVoice?"✓ Deutsch: "+deVoice.name:"⚠ Keine deutsche Stimme")}
+speechSynthesis.onvoiceschanged=findVoice;setTimeout(findVoice,500);
+const rate=document.getElementById("rate");rate.oninput=()=>document.getElementById("rv").textContent=rate.value;
+function say(t,lang){return new Promise(res=>{const u=new SpeechSynthesisUtterance(t);u.lang=lang;
+u.rate=lang==="de-DE"?1.0:parseFloat(rate.value);const v=lang==="de-DE"?deVoice:zhVoice;if(v)u.voice=v;
+u.onend=res;u.onerror=res;speechSynthesis.speak(u)})}
+const de=t=>say(t,"de-DE");
+function speak(t){speechSynthesis.cancel();say(t,"zh-CN")}
+const wait=s=>new Promise(r=>setTimeout(r,s*1000));
+function beep(f=880,d=0.25){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();
+o.frequency.value=f;o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(0.25,actx.currentTime);o.start();o.stop(actx.currentTime+d)}catch(e){}return wait(d+0.15)}
+function panel(h,mic){const p=document.getElementById("panel");p.innerHTML=h;p.className=mic?"mic":""}
+function dbg(t){document.getElementById("dbg").textContent=t}
+function clean(s){return s.replace(/[。，！？、\s.,!?]/g,"")}
+function score(heard,target){const a=clean(heard),b=clean(target);if(!b.length)return 0;let hit=0;for(const ch of b)if(a.includes(ch))hit++;return Math.round(hit/b.length*100)}
+// 20261029:1640 NEU: verständliche deutsche Fehlermeldungen
+const ERR={"not-allowed":"Das Mikrofon ist blockiert. Bitte links neben der Adresse auf das Symbol tippen, dann Berechtigungen, und das Mikrofon erlauben." /* 20261029:1700 GEÄNDERT */,
+"service-not-allowed":"Die Spracherkennung ist blockiert. Bitte die Datei in Chrome öffnen und das Mikrofon erlauben.",
+"audio-capture":"Es wurde kein Mikrofon gefunden.","network":"Die Spracherkennung braucht eine Internetverbindung."};
+// 20261029:1640 GEÄNDERT Funktion listen(): festes Sprechfenster statt sofortigem Abbruch
+// - continuous + interimResults: Erkennung bricht nicht nach Stille/Beep sofort ab
+// - endet sie vorzeitig ohne Ergebnis (z.B. no-speech), wird sie bis Fensterende neu gestartet
+// - nach erkannter Sprache 1,5 s Stille -> fertig; spätestens nach "Sprechzeit"
+function listen(p){return new Promise(res=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR){res({txt:"",best:-1,err:"nosr"});return}
+const winS=Math.max(3,parseInt(document.getElementById("win").value)||7),t0=Date.now();
+let finals="",interim="",finished=false,fatal=null,silenceT=null,starts=0;
+const bar=document.getElementById("bar"),fill=bar.firstElementChild;bar.style.display="block";
+const tick=setInterval(()=>{fill.style.width=Math.min(100,(Date.now()-t0)/(winS*10))+"%"},100);
+const endT=setTimeout(()=>finish(),winS*1000);
+function finish(){if(finished)return;finished=true;clearInterval(tick);clearTimeout(endT);clearTimeout(silenceT);
+bar.style.display="none";fill.style.width="0%";stopListen=null;try{curRec&&curRec.abort()}catch(e){}
+const txt=(finals+interim).trim();res({txt,best:txt?score(txt,p.zh):0,err:fatal})}
+stopListen=finish;
+function start(){if(finished)return;starts++;const r=new SR();curRec=r;r.lang="zh-CN";r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
+r.onresult=e=>{interim="";for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)finals+=t;else interim+=t}
+dbg("Höre: "+(finals+interim));clearTimeout(silenceT);silenceT=setTimeout(()=>finish(),1500)};
+r.onerror=e=>{dbg("Erkennung: "+e.error+" (Start "+starts+")");if(ERR[e.error]){fatal=e.error;finish()}};
+r.onend=()=>{if(finished)return;if(finals||interim){finish();return}
+if(Date.now()-t0<winS*1000-500)setTimeout(start,200);else finish()};
+try{r.start()}catch(e){dbg("Start-Fehler: "+e.message);setTimeout(start,300)}}
+start()})}
+// 20261029:1640 GEÄNDERT Funktion record(): Fehlermeldung anzeigen
+async function record(id){const p=phrases.find(x=>x.id===id);const out=document.getElementById("r"+id);out.textContent="🎙 Sprich jetzt…";
+await beep();await wait(0.3);const {txt,best,err}=await listen(p);await beep(440,0.15);
+out.innerHTML=best<0?"Spracherkennung nur in Chrome.":err?ERR[err]:"Erkannt: <b>"+(txt||"–")+"</b> – Treffer: <b>"+best+"%</b> "+(best===100?"👑":best>=70?"❤️":"🔁")}
+// 20261029:1640 NEU Funktion micTest(): einmal Mikrofon + Erkennung prüfen
+async function micTest(){panel("🎤 Sag nach dem Ton auf Chinesisch: 你好 (nǐ hǎo)",true);await de("Sag nach dem Ton: ni hao.");
+await beep();await wait(0.3);const r=await listen({zh:"你好"});await beep(440,0.15);
+if(r.best<0){panel("Spracherkennung nur in Chrome.");return}
+if(r.err){panel("⚠ "+ERR[r.err]);await de(ERR[r.err]);return}
+panel(r.txt?"✅ Mikrofon funktioniert. Erkannt: "+r.txt:"🔇 Nichts gehört – Mikrofon prüfen.");await de(r.txt?"Das Mikrofon funktioniert.":"Ich habe nichts gehört.")}
+// 20261029:1640 GEÄNDERT Funktion toggleGuide(): kurze Pause nach Ton, Fehler ansagen, Stopp beendet auch das Zuhören
+async function toggleGuide(){const b=document.getElementById("guide");
+if(running){running=false;speechSynthesis.cancel();if(stopListen)stopListen();b.textContent="▶ Geführt üben";b.className="";panel("Gestoppt.");return}
+running=true;b.textContent="■ Stopp";b.className="run";
+const P=()=>Math.max(2,parseInt(document.getElementById("pause").value)||10),
+P2=()=>Math.max(1,parseInt(document.getElementById("pause2").value)||4),T=()=>parseInt(document.getElementById("thr").value)||70;
+await de("Wir beginnen. Ich sage dir zuerst den deutschen Satz. Überleg kurz, dann kommt der chinesische Satz. Nach dem hohen Ton sprichst du nach. Der tiefe Ton heißt: fertig.");
+for(let i=0;i<phrases.length&&running;i++){const p=phrases[i];mark(p.id);
+panel("Satz "+(i+1)+": 🇩🇪 "+p.de);await de("Satz "+(i+1)+". "+p.de);if(!running)break;
+panel("🇩🇪 "+p.de+"<br>⏳ Überleg mal… ("+P()+" s)");await wait(P());if(!running)break;
+await de("Auf Chinesisch:");await playZh(p,true);if(!running)break;
+await de("Gleich bist du dran.");panel("⏳ Gleich bist du dran… ("+P()+" s)");await wait(P());if(!running)break;
+let ok=false;
+for(let t=1;t<=MAX_TRIES&&running;t++){
+await de(t===1?"Sprich jetzt, nach dem Ton.":"Versuch "+t+". Sprich nach dem Ton.");if(!running)break;
+panel("🎙 SPRICH JETZT: <b>"+p.zh+"</b> ("+p.py+") – Versuch "+t+"/"+MAX_TRIES,true);
+await beep();await wait(0.3);const {txt,best,err}=await listen(p);await beep(440,0.15);if(!running)break;
+if(best<0){panel("Spracherkennung nur in Chrome verfügbar.");await de("Die Spracherkennung funktioniert nur in Chrome.");running=false;break}
+if(err){panel("⚠ "+ERR[err]);await de(ERR[err]);running=false;break}
+if(best>=T()){panel("✅ Erkannt: "+txt+" – "+best+"% "+(best===100?"👑":"❤️"));
+await de(best===100?"Perfekt! Hundert Prozent.":"Gut gemacht! "+best+" Prozent.");ok=true;break}
+if(!txt){panel("🔇 Nichts gehört.");await de("Ich habe nichts gehört.")}
+else{panel("🔁 Erkannt: "+txt+" – "+best+"%");await de("Noch nicht ganz. "+best+" Prozent.")}
+if(!running)break;
+if(t<MAX_TRIES){await de("Hör noch einmal zu.");await playZh(p,false);if(!running)break;
+panel("⏳ Kurze Pause… ("+P2()+" s)");await wait(P2())}
+else await de("Wir gehen weiter. Diesen Satz üben wir später nochmal.")}
+if(ok&&running){status[p.id]=status[p.id]==="LEARNED"?"LEARNED":"LEARNING";save()}
+if(running){panel("➡ Nächster Satz…");await wait(2)}}
+if(running)await de("Super, die Übung ist beendet.");
+const wasRun=running;running=false;b.textContent="▶ Geführt üben";b.className="";mark(null);if(wasRun)panel("Fertig! 🎉")}
+async function playZh(p,words){panel("🇨🇳 <b>"+p.zh+"</b><br>"+p.py);await say(p.zh,"zh-CN");
+if(words){await wait(0.6);if(running)await de("Wort für Wort:");
+for(const x of p.w){if(!running)return;panel("🇨🇳 <b>"+x[0]+"</b> "+x[1]+" = "+x[2]);await say(x[0],"zh-CN");await de(x[2]);await wait(0.5)}
+if(running){await de("Noch einmal der ganze Satz:");panel("🇨🇳 <b>"+p.zh+"</b><br>"+p.py);await say(p.zh,"zh-CN")}}}
+function mark(id){document.querySelectorAll(".card").forEach(c=>c.classList.toggle("active",c.dataset.id==id));const a=document.querySelector(".card.active");if(a)a.scrollIntoView({behavior:"smooth",block:"center"})}
+function save(){try{localStorage.setItem("zhStatus",JSON.stringify(status))}catch(e){}render()}
+function cycle(id){status[id]=CY[status[id]||"NONE"];save()}
+function render(){document.getElementById("list").innerHTML=phrases.map(p=>{const s=status[p.id]||"NONE";return `
+<div class="card ${s}" data-id="${p.id}"><div class="de">${p.id}. ${p.de}</div>
+<div class="zh" onclick="speak('${p.zh}')">${p.zh}</div><div class="py">${p.py}</div>
+<div class="words">${p.w.map(x=>`<div class="w" onclick="speak('${x[0]}')"><div class="c">${x[0]}</div><div class="p">${x[1]}</div><div class="g">${x[2]}</div></div>`).join("")}</div>
+<button onclick="speak('${p.zh}')">🔊 Anhören</button><button class="rec" onclick="record(${p.id})">🎙 Nachsprechen</button>
+<button class="st" onclick="cycle(${p.id})">${ST[s]}</button><div class="res" id="r${p.id}"></div></div>`}).join("")}
+render();
+</script></body></html>
