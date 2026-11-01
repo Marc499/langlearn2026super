@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<!-- chinesisch/index.html (GitHub Pages) | 20261029:1710 NEU: Funktion heardHTML() – erkannter Satz mit Pinyin darunter, falsche/fehlende Zeichen rot
+<!-- chinesisch/index.html (GitHub Pages) | 20261101:0835 NEU: Kapitel (CHAPTERS, Funktion renderTabs(), setChapter(), cur()); Karten zugedeckt, Antippen deckt auf (Funktion reveal());
+     GEÄNDERT: Daten phrases (Feld ch, neue Sätze), Funktion render(), Funktion toggleGuide() übt nur das gewählte Kapitel
+     chinesisch/index.html (GitHub Pages) | 20261029:1710 NEU: Funktion heardHTML() – erkannter Satz mit Pinyin darunter, falsche/fehlende Zeichen rot
      chinesisch/index.html (GitHub Pages) | 20261029:1700 Basis ChinesischLernen_v4.html; GEÄNDERT: Hinweistext not-allowed
      ChinesischLernen_v4.html | 20261029:1640 Basis v3; GEÄNDERT: listen() mit festem Sprechfenster, Neustart bei vorzeitigem Ende, Fehlercodes werden angesagt -->
 <html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Chinesisch lernen – Mandarin v4</title>
+<title>Chinesisch lernen – Mandarin</title><!-- 20261101:0835 GEÄNDERT -->
 <style>
 body{font-family:system-ui,Arial,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:20px}
 .wrap{max-width:720px;margin:auto}
@@ -30,6 +32,14 @@ button.rec{background:#b91c1c}button.st{background:#475569}
 .ch{display:flex;flex-direction:column;align-items:center;min-width:1.6em;padding:2px 3px;border-radius:6px}/* 20261029:1710 */
 .ch .h{font-size:26px;line-height:1.2}.ch .y{font-size:12px;color:#38bdf8}/* 20261029:1710 */
 .ch.bad{background:#7f1d1d}.ch.bad .y{color:#fecaca}/* 20261029:1710 falsches/fehlendes Zeichen */
+#tabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 4px}/* 20261101:0835 NEU Kapitel-Reiter */
+#tabs button{background:#1e293b;border:1px solid #334155;color:#cbd5e1;margin:0;display:flex;flex-direction:column;align-items:flex-start;padding:8px 12px}/* 20261101:0835 */
+#tabs button small{font-size:11px;color:#64748b}/* 20261101:0835 */
+#tabs button.on{background:#0c4a6e;border-color:#38bdf8;color:#fff}#tabs button.on small{color:#bae6fd}/* 20261101:0835 */
+#chinfo{font-size:13px;color:#94a3b8;margin:4px 0 0}/* 20261101:0835 Kapitelbeschreibung */
+.card .q{font-size:21px;color:#f8fafc;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:baseline}/* 20261101:0835 deutscher Satz als Frage */
+.card .q .hint{font-size:12px;color:#64748b;white-space:nowrap}/* 20261101:0835 */
+.card .more{margin-top:8px;border-top:1px solid #334155;padding-top:8px}/* 20261101:0835 aufgedeckter Teil */
 </style></head><body><div class="wrap">
 <h1>Chinesisch · Mandarin</h1>
 <div id="voice">Stimmen werden gesucht…</div>
@@ -38,25 +48,64 @@ button.rec{background:#b91c1c}button.st{background:#475569}
 <label style="margin-left:14px">Pause nach Versuch (s): <input type="number" id="pause2" min="1" max="15" value="4" style="width:50px"></label>
 <label style="margin-left:14px">Sprechzeit (s): <input type="number" id="win" min="3" max="20" value="7" style="width:50px"></label><!-- 20261029:1640 NEU -->
 <label style="margin-left:14px">Schwelle %: <input type="number" id="thr" min="30" max="100" value="70" style="width:55px"></label>
-<div><button id="guide" onclick="toggleGuide()">▶ Geführt üben</button> <button class="st" onclick="micTest()">🎤 Mikrofon testen</button></div><!-- 20261029:1640 NEU Mikrofontest -->
-<div id="panel">Drücke „Geführt üben“. Alle Ansagen kommen gesprochen – du musst nichts lesen.</div>
+<div id="tabs"></div><div id="chinfo"></div><!-- 20261101:0835 NEU Kapitel -->
+<div><button id="guide" onclick="toggleGuide()">▶ Kapitel geführt üben</button><!-- 20261101:0835 GEÄNDERT Beschriftung --> <button class="st" onclick="micTest()">🎤 Mikrofon testen</button></div><!-- 20261029:1640 NEU Mikrofontest -->
+<div id="panel">Wähle ein Kapitel und drücke „Kapitel geführt üben“.<!-- 20261101:0835 GEÄNDERT --> Alle Ansagen kommen gesprochen – du musst nichts lesen.</div>
 <div id="bar"><div></div></div><!-- 20261029:1640 NEU Fortschrittsbalken Sprechzeit -->
 <div id="dbg"></div><!-- 20261029:1640 NEU Diagnosezeile -->
 <div id="list"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.26.0/dist/index.js"></script><!-- 20261029:1710 NEU Pinyin für erkannten Text -->
 <script>
-// Sätze – hier neue ergänzen | 20261029:0950
+// 20261101:0835 NEU Kapitel – Reihenfolge = Reiter
+const CHAPTERS=[
+{id:"basis",name:"Grundlagen",info:"Begrüßen, Danke, Bitte, Entschuldigung – das Wichtigste zuerst."},
+{id:"kennen",name:"Kennenlernen",info:"Sich vorstellen und einfache Fragen stellen."},
+{id:"alltag",name:"Essen & Unterwegs",info:"Im Restaurant, beim Einkaufen, nach dem Weg fragen."},
+{id:"spezial",name:"Spezialsätze",info:"Deine eigenen Sätze. Neue sagst du mir einfach, ich trage sie hier ein."}
+];
+// Sätze – hier neue ergänzen | 20261029:0950 | 20261101:0835 GEÄNDERT: Feld ch = Kapitel; ids 1–5 bleiben (Lernstatus bleibt erhalten)
 const phrases=[
-{id:1,de:"Hallo",zh:"你好",py:"nǐ hǎo",w:[["你","nǐ","du"],["好","hǎo","gut"]]},
-{id:2,de:"Ich bin sehr glücklich.",zh:"我很高兴。",py:"wǒ hěn gāoxìng",w:[["我","wǒ","ich"],["很","hěn","sehr"],["高兴","gāoxìng","froh, glücklich"]]},
-{id:3,de:"Ich freue mich, dich kennenzulernen.",zh:"很高兴认识你。",py:"hěn gāoxìng rènshi nǐ",w:[["很","hěn","sehr"],["高兴","gāoxìng","froh"],["认识","rènshi","kennenlernen"],["你","nǐ","dich"]]},
-{id:4,de:"Du hast eine sehr schöne Wohnung.",zh:"你家很漂亮。",py:"nǐ jiā hěn piàoliang",w:[["你","nǐ","dein"],["家","jiā","Zuhause, Wohnung"],["很","hěn","sehr"],["漂亮","piàoliang","schön"]]},
-{id:5,de:"Vielen Dank für die große Gastfreundschaft.",zh:"非常感谢你的热情款待。",py:"fēicháng gǎnxiè nǐ de rèqíng kuǎndài",w:[["非常","fēicháng","sehr, vielen"],["感谢","gǎnxiè","danken"],["你的","nǐ de","deine"],["热情","rèqíng","herzlich"],["款待","kuǎndài","Bewirtung"]]}
+// --- Grundlagen | 20261101:0835
+{id:1,ch:"basis",de:"Hallo",zh:"你好",py:"nǐ hǎo",w:[["你","nǐ","du"],["好","hǎo","gut"]]},
+{id:101,ch:"basis",de:"Guten Morgen.",zh:"早上好。",py:"zǎoshang hǎo",w:[["早上","zǎoshang","Morgen"],["好","hǎo","gut"]]}, // 20261101:0835
+{id:102,ch:"basis",de:"Wie geht es dir?",zh:"你好吗？",py:"nǐ hǎo ma",w:[["你","nǐ","du"],["好","hǎo","gut"],["吗","ma","Fragewort"]]}, // 20261101:0835
+{id:103,ch:"basis",de:"Mir geht es gut.",zh:"我很好。",py:"wǒ hěn hǎo",w:[["我","wǒ","ich"],["很","hěn","sehr"],["好","hǎo","gut"]]}, // 20261101:0835
+{id:104,ch:"basis",de:"Danke.",zh:"谢谢。",py:"xièxie",w:[["谢谢","xièxie","danke"]]}, // 20261101:0835
+{id:105,ch:"basis",de:"Bitte, gern geschehen.",zh:"不客气。",py:"bú kèqi",w:[["不","bú","nicht"],["客气","kèqi","förmlich, höflich"]]}, // 20261101:0835
+{id:106,ch:"basis",de:"Bitte setz dich.",zh:"请坐。",py:"qǐng zuò",w:[["请","qǐng","bitte"],["坐","zuò","sitzen"]]}, // 20261101:0835
+{id:107,ch:"basis",de:"Entschuldigung.",zh:"对不起。",py:"duìbuqǐ",w:[["对不起","duìbuqǐ","Entschuldigung"]]}, // 20261101:0835
+{id:108,ch:"basis",de:"Macht nichts.",zh:"没关系。",py:"méi guānxi",w:[["没","méi","nicht"],["关系","guānxi","Bedeutung, Beziehung"]]}, // 20261101:0835
+{id:109,ch:"basis",de:"Ich verstehe nicht.",zh:"我听不懂。",py:"wǒ tīng bu dǒng",w:[["我","wǒ","ich"],["听","tīng","hören"],["不","bu","nicht"],["懂","dǒng","verstehen"]]}, // 20261101:0835
+{id:110,ch:"basis",de:"Bitte sprich etwas langsamer.",zh:"请说慢一点。",py:"qǐng shuō màn yìdiǎn",w:[["请","qǐng","bitte"],["说","shuō","sprechen"],["慢","màn","langsam"],["一点","yìdiǎn","ein bisschen"]]}, // 20261101:0835
+{id:111,ch:"basis",de:"Auf Wiedersehen.",zh:"再见。",py:"zàijiàn",w:[["再","zài","wieder"],["见","jiàn","sehen"]]}, // 20261101:0835
+// --- Kennenlernen | 20261101:0835
+{id:201,ch:"kennen",de:"Wie heißt du?",zh:"你叫什么名字？",py:"nǐ jiào shénme míngzi",w:[["你","nǐ","du"],["叫","jiào","heißen"],["什么","shénme","was, welcher"],["名字","míngzi","Name"]]}, // 20261101:0835
+{id:202,ch:"kennen",de:"Ich heiße Marc.",zh:"我叫马克。",py:"wǒ jiào Mǎkè",w:[["我","wǒ","ich"],["叫","jiào","heißen"],["马克","Mǎkè","Marc"]]}, // 20261101:0835
+{id:203,ch:"kennen",de:"Ich bin Deutscher.",zh:"我是德国人。",py:"wǒ shì Déguó rén",w:[["我","wǒ","ich"],["是","shì","sein"],["德国","Déguó","Deutschland"],["人","rén","Mensch"]]}, // 20261101:0835
+{id:204,ch:"kennen",de:"Ich bin Professor.",zh:"我是教授。",py:"wǒ shì jiàoshòu",w:[["我","wǒ","ich"],["是","shì","sein"],["教授","jiàoshòu","Professor"]]}, // 20261101:0835
+{id:205,ch:"kennen",de:"Ich arbeite in Hamburg.",zh:"我在汉堡工作。",py:"wǒ zài Hànbǎo gōngzuò",w:[["我","wǒ","ich"],["在","zài","in"],["汉堡","Hànbǎo","Hamburg"],["工作","gōngzuò","arbeiten"]]}, // 20261101:0835
+{id:206,ch:"kennen",de:"Ich lerne Chinesisch.",zh:"我在学中文。",py:"wǒ zài xué Zhōngwén",w:[["我","wǒ","ich"],["在","zài","gerade (dabei)"],["学","xué","lernen"],["中文","Zhōngwén","Chinesisch"]]}, // 20261101:0835
+{id:207,ch:"kennen",de:"Woher kommst du?",zh:"你是哪国人？",py:"nǐ shì nǎ guó rén",w:[["你","nǐ","du"],["是","shì","sein"],["哪","nǎ","welches"],["国","guó","Land"],["人","rén","Mensch"]]}, // 20261101:0835
+// --- Essen & Unterwegs | 20261101:0835
+{id:301,ch:"alltag",de:"Wie viel kostet das?",zh:"这个多少钱？",py:"zhège duōshao qián",w:[["这个","zhège","dies"],["多少","duōshao","wie viel"],["钱","qián","Geld"]]}, // 20261101:0835
+{id:302,ch:"alltag",de:"Das schmeckt sehr gut.",zh:"很好吃。",py:"hěn hǎochī",w:[["很","hěn","sehr"],["好吃","hǎochī","lecker"]]}, // 20261101:0835
+{id:303,ch:"alltag",de:"Ich möchte Tee trinken.",zh:"我想喝茶。",py:"wǒ xiǎng hē chá",w:[["我","wǒ","ich"],["想","xiǎng","möchten"],["喝","hē","trinken"],["茶","chá","Tee"]]}, // 20261101:0835
+{id:304,ch:"alltag",de:"Prost!",zh:"干杯！",py:"gānbēi",w:[["干","gān","leeren"],["杯","bēi","Glas"]]}, // 20261101:0835
+{id:305,ch:"alltag",de:"Die Rechnung, bitte.",zh:"买单。",py:"mǎidān",w:[["买单","mǎidān","bezahlen, Rechnung"]]}, // 20261101:0835
+{id:306,ch:"alltag",de:"Wo ist die Toilette?",zh:"洗手间在哪里？",py:"xǐshǒujiān zài nǎlǐ",w:[["洗手间","xǐshǒujiān","Toilette"],["在","zài","sich befinden"],["哪里","nǎlǐ","wo"]]}, // 20261101:0835
+// --- Spezialsätze (deine eigenen) | 20261101:0835
+{id:2,ch:"spezial",de:"Ich bin sehr glücklich.",zh:"我很高兴。",py:"wǒ hěn gāoxìng",w:[["我","wǒ","ich"],["很","hěn","sehr"],["高兴","gāoxìng","froh, glücklich"]]},
+{id:3,ch:"spezial",de:"Ich freue mich, dich kennenzulernen.",zh:"很高兴认识你。",py:"hěn gāoxìng rènshi nǐ",w:[["很","hěn","sehr"],["高兴","gāoxìng","froh"],["认识","rènshi","kennenlernen"],["你","nǐ","dich"]]},
+{id:4,ch:"spezial",de:"Du hast eine sehr schöne Wohnung.",zh:"你家很漂亮。",py:"nǐ jiā hěn piàoliang",w:[["你","nǐ","dein"],["家","jiā","Zuhause, Wohnung"],["很","hěn","sehr"],["漂亮","piàoliang","schön"]]},
+{id:5,ch:"spezial",de:"Vielen Dank für die große Gastfreundschaft.",zh:"非常感谢你的热情款待。",py:"fēicháng gǎnxiè nǐ de rèqíng kuǎndài",w:[["非常","fēicháng","sehr, vielen"],["感谢","gǎnxiè","danken"],["你的","nǐ de","deine"],["热情","rèqíng","herzlich"],["款待","kuǎndài","Bewirtung"]]}
 ];
 const MAX_TRIES=3;
 const ST={NONE:"Noch zu lernen",LEARNING:"Lernen",LEARNED:"Gelernt"},CY={NONE:"LEARNING",LEARNING:"LEARNED",LEARNED:"NONE"};
 let status={};try{status=JSON.parse(localStorage.getItem("zhStatus")||"{}")}catch(e){}
 let zhVoice=null,deVoice=null,running=false,curRec=null,actx=null,stopListen=null;
+let chap="basis";try{const c=localStorage.getItem("zhChap");if(CHAPTERS.some(x=>x.id===c))chap=c}catch(e){} // 20261101:0835 NEU gewähltes Kapitel
+const shown=new Set(); // 20261101:0835 NEU aufgedeckte Karten
+const cur=()=>phrases.filter(p=>p.ch===chap); // 20261101:0835 NEU Funktion cur(): Sätze des Kapitels
 function findVoice(){const all=speechSynthesis.getVoices();
 const zh=all.filter(x=>/zh[-_]CN/i.test(x.lang)||/普通话|Mandarin/i.test(x.name));zhVoice=zh.find(x=>/Google/.test(x.name))||zh[0]||null;
 const de=all.filter(x=>/^de/i.test(x.lang));deVoice=de.find(x=>/Google/.test(x.name))||de[0]||null;
@@ -122,14 +171,17 @@ if(r.err){panel("⚠ "+ERR[r.err]);await de(ERR[r.err]);return}
 panel(r.txt?"✅ Mikrofon funktioniert."+heardHTML(r.txt,{zh:"你好"}): /* 20261029:1710 GEÄNDERT Funktion micTest() */"🔇 Nichts gehört – Mikrofon prüfen.");await de(r.txt?"Das Mikrofon funktioniert.":"Ich habe nichts gehört.")}
 // 20261029:1640 GEÄNDERT Funktion toggleGuide(): kurze Pause nach Ton, Fehler ansagen, Stopp beendet auch das Zuhören
 async function toggleGuide(){const b=document.getElementById("guide");
-if(running){running=false;speechSynthesis.cancel();if(stopListen)stopListen();b.textContent="▶ Geführt üben";b.className="";panel("Gestoppt.");return}
+if(running){running=false;speechSynthesis.cancel();if(stopListen)stopListen();b.textContent="▶ Kapitel geführt üben"; /* 20261101:0835 */b.className="";panel("Gestoppt.");return}
 running=true;b.textContent="■ Stopp";b.className="run";
 const P=()=>Math.max(2,parseInt(document.getElementById("pause").value)||10),
 P2=()=>Math.max(1,parseInt(document.getElementById("pause2").value)||4),T=()=>parseInt(document.getElementById("thr").value)||70;
-await de("Wir beginnen. Ich sage dir zuerst den deutschen Satz. Überleg kurz, dann kommt der chinesische Satz. Nach dem hohen Ton sprichst du nach. Der tiefe Ton heißt: fertig.");
-for(let i=0;i<phrases.length&&running;i++){const p=phrases[i];mark(p.id);
+const list=cur(),chName=CHAPTERS.find(c=>c.id===chap).name; // 20261101:0835 NEU nur gewähltes Kapitel
+await de("Kapitel "+chName+". "+list.length+" Sätze."); // 20261101:0835
+if(running)await de("Wir beginnen. Ich sage dir zuerst den deutschen Satz. Überleg kurz, dann kommt der chinesische Satz. Nach dem hohen Ton sprichst du nach. Der tiefe Ton heißt: fertig.");
+for(let i=0;i<list.length&&running;i++){const p=list[i];mark(p.id); // 20261101:0835 GEÄNDERT list statt phrases
 panel("Satz "+(i+1)+": 🇩🇪 "+p.de);await de("Satz "+(i+1)+". "+p.de);if(!running)break;
 panel("🇩🇪 "+p.de+"<br>⏳ Überleg mal… ("+P()+" s)");await wait(P());if(!running)break;
+reveal(p.id,true); // 20261101:0835 NEU Karte erst nach der Überlegpause aufdecken
 await de("Auf Chinesisch:");await playZh(p,true);if(!running)break;
 await de("Gleich bist du dran.");panel("⏳ Gleich bist du dran… ("+P()+" s)");await wait(P());if(!running)break;
 let ok=false;
@@ -151,7 +203,7 @@ else await de("Wir gehen weiter. Diesen Satz üben wir später nochmal.")}
 if(ok&&running){status[p.id]=status[p.id]==="LEARNED"?"LEARNED":"LEARNING";save()}
 if(running){panel("➡ Nächster Satz…");await wait(2)}}
 if(running)await de("Super, die Übung ist beendet.");
-const wasRun=running;running=false;b.textContent="▶ Geführt üben";b.className="";mark(null);if(wasRun)panel("Fertig! 🎉")}
+const wasRun=running;running=false;b.textContent="▶ Kapitel geführt üben"; /* 20261101:0835 */b.className="";mark(null);if(wasRun)panel("Fertig! 🎉")}
 async function playZh(p,words){panel("🇨🇳 <b>"+p.zh+"</b><br>"+p.py);await say(p.zh,"zh-CN");
 if(words){await wait(0.6);if(running)await de("Wort für Wort:");
 for(const x of p.w){if(!running)return;panel("🇨🇳 <b>"+x[0]+"</b> "+x[1]+" = "+x[2]);await say(x[0],"zh-CN");await de(x[2]);await wait(0.5)}
@@ -159,11 +211,22 @@ if(running){await de("Noch einmal der ganze Satz:");panel("🇨🇳 <b>"+p.zh+"<
 function mark(id){document.querySelectorAll(".card").forEach(c=>c.classList.toggle("active",c.dataset.id==id));const a=document.querySelector(".card.active");if(a)a.scrollIntoView({behavior:"smooth",block:"center"})}
 function save(){try{localStorage.setItem("zhStatus",JSON.stringify(status))}catch(e){}render()}
 function cycle(id){status[id]=CY[status[id]||"NONE"];save()}
-function render(){document.getElementById("list").innerHTML=phrases.map(p=>{const s=status[p.id]||"NONE";return `
-<div class="card ${s}" data-id="${p.id}"><div class="de">${p.id}. ${p.de}</div>
+// 20261101:0835 NEU Funktion renderTabs(): Kapitel-Reiter mit Fortschritt
+function renderTabs(){document.getElementById("tabs").innerHTML=CHAPTERS.map(c=>{const ps=phrases.filter(p=>p.ch===c.id),ok=ps.filter(p=>status[p.id]==="LEARNED").length;
+return `<button class="${c.id===chap?"on":""}" onclick="setChapter('${c.id}')">${c.name}<small>${ok}/${ps.length} gelernt</small></button>`}).join(""); // 20261101:0835
+document.getElementById("chinfo").textContent=CHAPTERS.find(c=>c.id===chap).info} // 20261101:0835
+// 20261101:0835 NEU Funktion setChapter(): Kapitel wechseln (nicht während der geführten Übung)
+function setChapter(id){if(running)return;chap=id;try{localStorage.setItem("zhChap",id)}catch(e){}render();window.scrollTo({top:0})} // 20261101:0835
+// 20261101:0835 NEU Funktion reveal(): Karte auf-/zudecken ohne neu zu zeichnen
+function reveal(id,force){const open=force??!shown.has(id);open?shown.add(id):shown.delete(id); // 20261101:0835
+const c=document.querySelector('.card[data-id="'+id+'"]');if(!c)return;c.querySelector(".more").hidden=!open;c.querySelector(".hint").textContent=open?"zudecken":"antippen zum Aufdecken"} // 20261101:0835
+// 20261101:0835 GEÄNDERT Funktion render(): nur Kapitel, deutscher Satz zuerst, Rest zugedeckt
+function render(){renderTabs();document.getElementById("list").innerHTML=cur().map((p,i)=>{const s=status[p.id]||"NONE",open=shown.has(p.id);return `
+<div class="card ${s}" data-id="${p.id}"><div class="q" onclick="reveal(${p.id})"><span>${i+1}. ${p.de}</span><span class="hint">${open?"zudecken":"antippen zum Aufdecken"}</span></div>
+<div class="more"${open?"":" hidden"}>
 <div class="zh" onclick="speak('${p.zh}')">${p.zh}</div><div class="py">${p.py}</div>
 <div class="words">${p.w.map(x=>`<div class="w" onclick="speak('${x[0]}')"><div class="c">${x[0]}</div><div class="p">${x[1]}</div><div class="g">${x[2]}</div></div>`).join("")}</div>
 <button onclick="speak('${p.zh}')">🔊 Anhören</button><button class="rec" onclick="record(${p.id})">🎙 Nachsprechen</button>
-<button class="st" onclick="cycle(${p.id})">${ST[s]}</button><div class="res" id="r${p.id}"></div></div>`}).join("")}
+<button class="st" onclick="cycle(${p.id})">${ST[s]}</button><div class="res" id="r${p.id}"></div></div></div>`}).join("")}
 render();
 </script></body></html>
