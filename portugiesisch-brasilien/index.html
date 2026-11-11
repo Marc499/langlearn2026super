@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<!-- portugiesisch-brasilien/index.html (GitHub Pages) | 20261111:1000 NEU: Basis chinesisch/index.html (Stand 20261101:0835)
+     GEÄNDERT gegenüber Chinesisch: Sprache pt-BR (Objekt LANG), Feld pt statt zh, Feld ip = Aussprachehilfe für Deutsche statt Pinyin,
+     Funktion score() vergleicht Wörter statt Zeichen (Akzente und Groß/Klein egal), Funktion rowHTML() zeigt Wörter, speak per id statt Text im onclick
+     Später: portugiesisch-portugal/ und thai/ als Kopie dieser Datei – nur LANG, CHAPTERS und phrases austauschen -->
+<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portugiesisch lernen – Brasilien</title>
+<style>
+body{font-family:system-ui,Arial,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:20px}
+.wrap{max-width:720px;margin:auto}
+h1{margin:0 0 4px;color:#f8fafc}#voice{font-size:13px;margin-bottom:12px}
+.ok{color:#4ade80}.warn{color:#fbbf24}
+.card{background:#1e293b;border-radius:12px;padding:16px;margin:12px 0;border-left:6px solid #94a3b8}
+.card.LEARNING{border-color:#f59e0b}.card.LEARNED{border-color:#22c55e}.card.active{outline:3px solid #38bdf8}
+.tl{font-size:30px;margin:6px 0;cursor:pointer;color:#fde68a}.ip{font-size:18px;color:#38bdf8}
+.words{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}
+.w{background:#0f172a;border-radius:8px;padding:6px 10px;text-align:center;cursor:pointer}
+.w .c{font-size:20px}.w .p{font-size:13px;color:#38bdf8}.w .g{font-size:12px;color:#cbd5e1}
+button{background:#0369a1;color:#fff;border:0;border-radius:8px;padding:8px 12px;margin:4px 4px 0 0;cursor:pointer;font-size:14px}
+button.rec{background:#b91c1c}button.st{background:#475569}
+#guide{background:#16a34a;font-size:18px;padding:12px 18px}#guide.run{background:#b91c1c}
+#panel{background:#1e293b;border-radius:12px;padding:14px;margin:12px 0;font-size:18px;min-height:28px}
+#panel.mic{background:#7f1d1d}
+#bar{height:8px;background:#334155;border-radius:4px;margin-top:8px;overflow:hidden;display:none}
+#bar div{height:100%;background:#f87171;width:0%}
+#dbg{font-size:12px;color:#64748b;margin-top:6px}
+.res{margin-top:8px;font-size:15px}
+.cmp{display:grid;gap:6px;margin-top:8px}
+.cmp .lbl{font-size:12px;color:#94a3b8}
+.row{display:flex;flex-wrap:wrap;gap:4px}
+.wd{font-size:20px;padding:2px 6px;border-radius:6px;background:#0f172a}/* 20261111:1000 Wort statt Zeichen */
+.wd.bad{background:#7f1d1d;color:#fecaca}
+#tabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 4px}
+#tabs button{background:#1e293b;border:1px solid #334155;color:#cbd5e1;margin:0;display:flex;flex-direction:column;align-items:flex-start;padding:8px 12px}
+#tabs button small{font-size:11px;color:#64748b}
+#tabs button.on{background:#14532d;border-color:#4ade80;color:#fff}#tabs button.on small{color:#bbf7d0}
+#chinfo{font-size:13px;color:#94a3b8;margin:4px 0 0}
+.card .q{font-size:21px;color:#f8fafc;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.card .q .hint{font-size:12px;color:#64748b;white-space:nowrap}
+.card .more{margin-top:8px;border-top:1px solid #334155;padding-top:8px}
+details{font-size:13px;color:#94a3b8;margin:8px 0}details b{color:#e2e8f0}/* 20261111:1000 NEU Lesehilfe Aussprache */
+label{display:inline-block;margin:2px 14px 2px 0}
+</style></head><body><div class="wrap">
+<a href="../" style="color:#94a3b8;font-size:14px;text-decoration:none">← Alle Sprachen</a>
+<h1>🇧🇷 Portugiesisch · Brasilien</h1>
+<div id="voice">Stimmen werden gesucht…</div>
+<label>Tempo: <input type="range" id="rate" min="0.4" max="1.2" step="0.1" value="0.8"> <span id="rv">0.8</span></label>
+<label>Pause (s): <input type="number" id="pause" min="2" max="30" value="10" style="width:50px"></label>
+<label>Pause nach Versuch (s): <input type="number" id="pause2" min="1" max="15" value="4" style="width:50px"></label>
+<label>Sprechzeit (s): <input type="number" id="win" min="3" max="20" value="7" style="width:50px"></label>
+<label>Schwelle %: <input type="number" id="thr" min="30" max="100" value="70" style="width:55px"></label>
+<details><summary>So liest du die Aussprachehilfe</summary><!-- 20261111:1000 NEU -->
+<b>GROSS</b> = betonte Silbe · <b>ã õ ẽ ũ</b> = durch die Nase, ohne „ng“ am Ende · <b>sch</b> wie in „Schule“, <b>sh</b> weich wie in „Garage“ ·
+<b>dschi / tschi</b>: in Brasilien klingen <i>de</i> und <i>te</i> am Wortende so · <b>nj</b> wie in „Champagner“, <b>lj</b> wie in „Familie“ ·
+<b>u</b> am Wortende: unbetontes <i>o</i> wird zu <i>u</i> · <b>s</b> = stimmhaftes s wie in „Sonne“, <b>ss</b> = scharfes s · <b>ä</b> = offenes e.
+</details>
+<div id="tabs"></div><div id="chinfo"></div>
+<div><button id="guide" onclick="toggleGuide()">▶ Kapitel geführt üben</button> <button class="st" onclick="micTest()">🎤 Mikrofon testen</button></div>
+<div id="panel">Wähle ein Kapitel und drücke „Kapitel geführt üben“. Alle Ansagen kommen gesprochen – du musst nichts lesen.</div>
+<div id="bar"><div></div></div>
+<div id="dbg"></div>
+<div id="list"></div></div>
+<script>
+// 20261111:1000 NEU Sprachobjekt – für Portugal/Thai nur diesen Block, CHAPTERS und phrases tauschen
+const LANG={
+code:"pt-BR",            // Sprachausgabe + Spracherkennung
+key:"ptbr",              // Präfix für localStorage (eigener Lernstand je Sprache)
+flag:"🇧🇷",name:"Portugiesisch",
+voiceOk:v=>/pt[-_]BR/i.test(v.lang)||/Brasil|Brazil/i.test(v.name),   // passende Stimme
+voiceFallback:v=>/^pt/i.test(v.lang),                                   // notfalls irgendein Portugiesisch
+testPhrase:{pt:"Oi, tudo bem?",ip:"oi, TU-du bẽj"}
+};
+const CHAPTERS=[
+{id:"basis",name:"Grundlagen",info:"Begrüßen, Danke, Bitte, Entschuldigung – das Wichtigste zuerst. Als Mann sagst du „obrigado“, als Frau „obrigada“."},
+{id:"kennen",name:"Kennenlernen",info:"Sich vorstellen und einfache Fragen stellen. In Brasilien sagt man zu fast allen „você“ (du/Sie)."},
+{id:"alltag",name:"Essen & Unterwegs",info:"Im Restaurant, beim Einkaufen, nach dem Weg fragen."},
+{id:"spezial",name:"Spezialsätze",info:"Deine eigenen Sätze. Neue sagst du mir einfach, ich trage sie hier ein."}
+];
+// Sätze – hier neue ergänzen | 20261111:1000
+// Felder: id (fest, hängt am Lernstand) · ch Kapitel · de Deutsch · pt Portugiesisch (Brasilien) · ip Aussprachehilfe · w Wörter [Wort, Aussprache, Bedeutung]
+const phrases=[
+// --- Grundlagen
+{id:101,ch:"basis",de:"Hallo!",pt:"Oi!",ip:"oi",w:[["oi","oi","hallo"]]},
+{id:102,ch:"basis",de:"Guten Morgen.",pt:"Bom dia.",ip:"bõ DSCHI-a",w:[["bom","bõ","gut"],["dia","DSCHI-a","Tag"]]},
+{id:103,ch:"basis",de:"Guten Tag (nachmittags).",pt:"Boa tarde.",ip:"BO-a TAR-dschi",w:[["boa","BO-a","gut"],["tarde","TAR-dschi","Nachmittag"]]},
+{id:104,ch:"basis",de:"Wie geht's?",pt:"Tudo bem?",ip:"TU-du bẽj",w:[["tudo","TU-du","alles"],["bem","bẽj","gut"]]},
+{id:105,ch:"basis",de:"Gut, danke.",pt:"Tudo bem, obrigado.",ip:"TU-du bẽj, o-bri-GA-du",w:[["tudo","TU-du","alles"],["bem","bẽj","gut"],["obrigado","o-bri-GA-du","danke"]]},
+{id:106,ch:"basis",de:"Danke schön.",pt:"Muito obrigado.",ip:"MŨJ-tu o-bri-GA-du",w:[["muito","MŨJ-tu","sehr, viel"],["obrigado","o-bri-GA-du","danke"]]},
+{id:107,ch:"basis",de:"Gern geschehen.",pt:"De nada.",ip:"dschi NA-da",w:[["de","dschi","von"],["nada","NA-da","nichts"]]},
+{id:108,ch:"basis",de:"Bitte.",pt:"Por favor.",ip:"pur fa-VOR",w:[["por","pur","für"],["favor","fa-VOR","Gefallen"]]},
+{id:109,ch:"basis",de:"Entschuldigung, darf ich mal?",pt:"Com licença.",ip:"kõ li-SẼ-ssa",w:[["com","kõ","mit"],["licença","li-SẼ-ssa","Erlaubnis"]]},
+{id:110,ch:"basis",de:"Entschuldigung, tut mir leid.",pt:"Desculpa.",ip:"dschis-KUL-pa",w:[["desculpa","dschis-KUL-pa","Entschuldigung"]]},
+{id:111,ch:"basis",de:"Macht nichts.",pt:"Não tem problema.",ip:"nãu tẽj pro-BLE-ma",w:[["não","nãu","nicht"],["tem","tẽj","gibt es"],["problema","pro-BLE-ma","Problem"]]},
+{id:112,ch:"basis",de:"Ich verstehe nicht.",pt:"Não entendo.",ip:"nãu ẽ-TẼ-du",w:[["não","nãu","nicht"],["entendo","ẽ-TẼ-du","ich verstehe"]]},
+{id:113,ch:"basis",de:"Kannst du langsamer sprechen?",pt:"Você pode falar mais devagar?",ip:"vo-SSE PO-dschi fa-LAR majs de-va-GAR",w:[["você","vo-SSE","du"],["pode","PO-dschi","kannst"],["falar","fa-LAR","sprechen"],["mais","majs","mehr"],["devagar","de-va-GAR","langsam"]]},
+{id:114,ch:"basis",de:"Tschüss!",pt:"Tchau!",ip:"tschau",w:[["tchau","tschau","tschüss"]]},
+{id:115,ch:"basis",de:"Bis später.",pt:"Até logo.",ip:"a-TÄ LO-gu",w:[["até","a-TÄ","bis"],["logo","LO-gu","gleich, bald"]]},
+// --- Kennenlernen
+{id:201,ch:"kennen",de:"Wie heißt du?",pt:"Como você se chama?",ip:"KO-mu vo-SSE ssi SCHA-ma",w:[["como","KO-mu","wie"],["você","vo-SSE","du"],["se","ssi","dich"],["chama","SCHA-ma","nennst"]]},
+{id:202,ch:"kennen",de:"Ich heiße Marc.",pt:"Eu me chamo Marc.",ip:"E-u mi SCHA-mu Marc",w:[["eu","E-u","ich"],["me","mi","mich"],["chamo","SCHA-mu","nenne"],["Marc","Marc","Marc"]]},
+{id:203,ch:"kennen",de:"Freut mich!",pt:"Muito prazer!",ip:"MŨJ-tu pra-SER",w:[["muito","MŨJ-tu","sehr"],["prazer","pra-SER","Vergnügen"]]},
+{id:204,ch:"kennen",de:"Ich bin Deutscher.",pt:"Eu sou alemão.",ip:"E-u ssou a-le-MÃU",w:[["eu","E-u","ich"],["sou","ssou","bin"],["alemão","a-le-MÃU","Deutscher"]]},
+{id:205,ch:"kennen",de:"Ich bin Professor.",pt:"Eu sou professor.",ip:"E-u ssou pro-fe-SSOR",w:[["eu","E-u","ich"],["sou","ssou","bin"],["professor","pro-fe-SSOR","Professor, Lehrer"]]},
+{id:206,ch:"kennen",de:"Ich arbeite in Hamburg.",pt:"Eu trabalho em Hamburgo.",ip:"E-u tra-BA-lju ẽj ã-BUR-gu",w:[["eu","E-u","ich"],["trabalho","tra-BA-lju","arbeite"],["em","ẽj","in"],["Hamburgo","ã-BUR-gu","Hamburg"]]},
+{id:207,ch:"kennen",de:"Ich lerne Portugiesisch.",pt:"Estou aprendendo português.",ip:"is-TOU a-prẽ-DẼ-du por-tu-GEJS",w:[["estou","is-TOU","ich bin (gerade)"],["aprendendo","a-prẽ-DẼ-du","lernend"],["português","por-tu-GEJS","Portugiesisch"]]},
+{id:208,ch:"kennen",de:"Woher kommst du?",pt:"De onde você é?",ip:"dschi Õ-dschi vo-SSE Ä",w:[["de","dschi","von"],["onde","Õ-dschi","wo"],["você","vo-SSE","du"],["é","Ä","bist"]]},
+// --- Essen & Unterwegs
+{id:301,ch:"alltag",de:"Wie viel kostet das?",pt:"Quanto custa?",ip:"KUÃ-tu KUS-ta",w:[["quanto","KUÃ-tu","wie viel"],["custa","KUS-ta","kostet"]]},
+{id:302,ch:"alltag",de:"Das schmeckt sehr gut.",pt:"Está muito gostoso.",ip:"is-TA MŨJ-tu gos-TO-su",w:[["está","is-TA","ist"],["muito","MŨJ-tu","sehr"],["gostoso","gos-TO-su","lecker"]]},
+{id:303,ch:"alltag",de:"Ich hätte gern einen Kaffee, bitte.",pt:"Eu queria um café, por favor.",ip:"E-u ke-RI-a ũ ka-FÄ, pur fa-VOR",w:[["eu","E-u","ich"],["queria","ke-RI-a","hätte gern"],["um","ũ","einen"],["café","ka-FÄ","Kaffee"],["por favor","pur fa-VOR","bitte"]]},
+{id:304,ch:"alltag",de:"Ein Wasser, bitte.",pt:"Uma água, por favor.",ip:"U-ma A-gua, pur fa-VOR",w:[["uma","U-ma","ein"],["água","A-gua","Wasser"],["por favor","pur fa-VOR","bitte"]]},
+{id:305,ch:"alltag",de:"Prost!",pt:"Saúde!",ip:"ssa-U-dschi",w:[["saúde","ssa-U-dschi","Gesundheit"]]},
+{id:306,ch:"alltag",de:"Die Rechnung, bitte.",pt:"A conta, por favor.",ip:"a KÕ-ta, pur fa-VOR",w:[["a","a","die"],["conta","KÕ-ta","Rechnung"],["por favor","pur fa-VOR","bitte"]]},
+{id:307,ch:"alltag",de:"Wo ist die Toilette?",pt:"Onde fica o banheiro?",ip:"Õ-dschi FI-ka u ba-NJEJ-ru",w:[["onde","Õ-dschi","wo"],["fica","FI-ka","befindet sich"],["o","u","der/die"],["banheiro","ba-NJEJ-ru","Toilette, Bad"]]},
+// --- Spezialsätze (deine eigenen, wie im Chinesisch-Trainer)
+{id:401,ch:"spezial",de:"Ich bin sehr glücklich.",pt:"Estou muito feliz.",ip:"is-TOU MŨJ-tu fe-LIS",w:[["estou","is-TOU","ich bin"],["muito","MŨJ-tu","sehr"],["feliz","fe-LIS","glücklich"]]},
+{id:402,ch:"spezial",de:"Ich freue mich, dich kennenzulernen.",pt:"Prazer em te conhecer.",ip:"pra-SER ẽj tschi ko-nje-SER",w:[["prazer","pra-SER","Freude"],["em","ẽj","darin"],["te","tschi","dich"],["conhecer","ko-nje-SER","kennenlernen"]]},
+{id:403,ch:"spezial",de:"Du hast ein sehr schönes Zuhause.",pt:"Sua casa é muito bonita.",ip:"SSU-a KA-sa Ä MŨJ-tu bo-NI-ta",w:[["sua","SSU-a","dein"],["casa","KA-sa","Haus, Zuhause"],["é","Ä","ist"],["muito","MŨJ-tu","sehr"],["bonita","bo-NI-ta","schön"]]},
+{id:404,ch:"spezial",de:"Vielen Dank für die große Gastfreundschaft.",pt:"Muito obrigado por toda a hospitalidade.",ip:"MŨJ-tu o-bri-GA-du pur TO-da a os-pi-ta-li-DA-dschi",w:[["muito","MŨJ-tu","sehr, vielen"],["obrigado","o-bri-GA-du","danke"],["por","pur","für"],["toda a","TO-da a","die ganze"],["hospitalidade","os-pi-ta-li-DA-dschi","Gastfreundschaft"]]}
+];
+const MAX_TRIES=3;
+const ST={NONE:"Noch zu lernen",LEARNING:"Lernen",LEARNED:"Gelernt"},CY={NONE:"LEARNING",LEARNING:"LEARNED",LEARNED:"NONE"};
+let status={};try{status=JSON.parse(localStorage.getItem(LANG.key+"Status")||"{}")}catch(e){}
+let tlVoice=null,deVoice=null,running=false,curRec=null,actx=null,stopListen=null;
+let chap="basis";try{const c=localStorage.getItem(LANG.key+"Chap");if(CHAPTERS.some(x=>x.id===c))chap=c}catch(e){}
+const shown=new Set();
+const cur=()=>phrases.filter(p=>p.ch===chap);
+const byId=id=>phrases.find(x=>x.id===id);
+// 20261111:1000 GEÄNDERT Funktion findVoice(): zuerst Brasilien-Stimme, sonst Portugal-Stimme mit Warnung
+function findVoice(){const all=speechSynthesis.getVoices();
+const ok=all.filter(LANG.voiceOk),fb=all.filter(LANG.voiceFallback);
+tlVoice=ok.find(x=>/Google/.test(x.name))||ok[0]||fb[0]||null;
+const de=all.filter(x=>/^de/i.test(x.lang));deVoice=de.find(x=>/Google/.test(x.name))||de[0]||null;
+const el=document.getElementById("voice"),exact=tlVoice&&ok.includes(tlVoice);el.className=exact?"ok":"warn";
+el.textContent=(exact?"✓ "+LANG.name+": "+tlVoice.name:tlVoice?"⚠ Nur "+tlVoice.name+" ("+tlVoice.lang+") – klingt nicht brasilianisch":"⚠ Keine portugiesische Stimme – bitte Chrome nutzen")+" | "+(deVoice?"✓ Deutsch: "+deVoice.name:"⚠ Keine deutsche Stimme")}
+speechSynthesis.onvoiceschanged=findVoice;setTimeout(findVoice,500);
+const rate=document.getElementById("rate");rate.oninput=()=>document.getElementById("rv").textContent=rate.value;
+function say(t,lang){return new Promise(res=>{const u=new SpeechSynthesisUtterance(t);u.lang=lang;
+u.rate=lang==="de-DE"?1.0:parseFloat(rate.value);const v=lang==="de-DE"?deVoice:tlVoice;if(v)u.voice=v;
+u.onend=res;u.onerror=res;speechSynthesis.speak(u)})}
+const de=t=>say(t,"de-DE");
+const tl=t=>say(t,LANG.code);
+function speak(t){speechSynthesis.cancel();tl(t)}
+function speakId(id,wi){const p=byId(id);if(p)speak(wi==null?p.pt:p.w[wi][0])} // 20261111:1000 NEU: kein Text im onclick (Apostrophe)
+const wait=s=>new Promise(r=>setTimeout(r,s*1000));
+function beep(f=880,d=0.25){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();
+o.frequency.value=f;o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(0.25,actx.currentTime);o.start();o.stop(actx.currentTime+d)}catch(e){}return wait(d+0.15)}
+function panel(h,mic){const p=document.getElementById("panel");p.innerHTML=h;p.className=mic?"mic":""}
+function dbg(t){document.getElementById("dbg").textContent=t}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// 20261111:1000 GEÄNDERT Funktion norm()/words()/score(): Wörter vergleichen, Akzente und Satzzeichen egal
+const norm=s=>s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9\s'-]/g," ").trim();
+const words=s=>norm(s).split(/[\s-]+/).filter(Boolean);
+function score(heard,target){const a=words(heard),b=words(target);if(!b.length)return 0;const pool=[...a];let hit=0;
+for(const w of b){const i=pool.indexOf(w);if(i>=0){hit++;pool.splice(i,1)}}return Math.round(hit/b.length*100)}
+// 20261111:1000 GEÄNDERT Funktion rowHTML(): Originalwörter zeigen, rot wenn im anderen Satz nicht vorhanden
+function rowHTML(t,other){const o=words(other);return '<div class="row">'+t.trim().split(/\s+/).filter(Boolean).map(x=>{const n=words(x);
+return '<span class="wd'+(n.every(k=>o.includes(k))?'':' bad')+'">'+esc(x)+'</span>'}).join('')+'</div>'}
+function heardHTML(txt,p){if(!txt)return "";
+return '<div class="cmp"><div class="lbl">Du hast gesagt (rot = passt nicht):</div>'+rowHTML(txt,p.pt)+
+'<div class="lbl">Richtig wäre (rot = fehlte bei dir):</div>'+rowHTML(p.pt,txt)+'</div>'}
+const ERR={"not-allowed":"Das Mikrofon ist blockiert. Bitte links neben der Adresse auf das Symbol tippen, dann Berechtigungen, und das Mikrofon erlauben.",
+"service-not-allowed":"Die Spracherkennung ist blockiert. Bitte die Seite in Chrome öffnen und das Mikrofon erlauben.",
+"audio-capture":"Es wurde kein Mikrofon gefunden.","network":"Die Spracherkennung braucht eine Internetverbindung.",
+"language-not-supported":"Die Spracherkennung kann kein brasilianisches Portugiesisch. Bitte Chrome nutzen."}; // 20261111:1000 NEU language-not-supported
+// Funktion listen(): festes Sprechfenster, Neustart bei vorzeitigem Ende, 1,5 s Stille nach Sprache -> fertig (wie Chinesisch)
+function listen(p){return new Promise(res=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR){res({txt:"",best:-1,err:"nosr"});return}
+const winS=Math.max(3,parseInt(document.getElementById("win").value)||7),t0=Date.now();
+let finals="",interim="",finished=false,fatal=null,silenceT=null,starts=0;
+const bar=document.getElementById("bar"),fill=bar.firstElementChild;bar.style.display="block";
+const tick=setInterval(()=>{fill.style.width=Math.min(100,(Date.now()-t0)/(winS*10))+"%"},100);
+const endT=setTimeout(()=>finish(),winS*1000);
+function finish(){if(finished)return;finished=true;clearInterval(tick);clearTimeout(endT);clearTimeout(silenceT);
+bar.style.display="none";fill.style.width="0%";stopListen=null;try{curRec&&curRec.abort()}catch(e){}
+const txt=(finals+" "+interim).replace(/\s+/g," ").trim();res({txt,best:txt?score(txt,p.pt):0,err:fatal})} // 20261111:1000 Leerzeichen zwischen Teilergebnissen
+stopListen=finish;
+function start(){if(finished)return;starts++;const r=new SR();curRec=r;r.lang=LANG.code;r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
+r.onresult=e=>{interim="";for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)finals+=" "+t;else interim+=t}
+dbg("Höre: "+(finals+" "+interim).trim());clearTimeout(silenceT);silenceT=setTimeout(()=>finish(),1500)};
+r.onerror=e=>{dbg("Erkennung: "+e.error+" (Start "+starts+")");if(ERR[e.error]){fatal=e.error;finish()}};
+r.onend=()=>{if(finished)return;if(finals.trim()||interim){finish();return}
+if(Date.now()-t0<winS*1000-500)setTimeout(start,200);else finish()};
+try{r.start()}catch(e){dbg("Start-Fehler: "+e.message);setTimeout(start,300)}}
+start()})}
+async function record(id){const p=byId(id);const out=document.getElementById("r"+id);out.textContent="🎙 Sprich jetzt…";
+await beep();await wait(0.3);const {txt,best,err}=await listen(p);await beep(440,0.15);
+out.innerHTML=best<0?"Spracherkennung nur in Chrome.":err?ERR[err]:"Treffer: <b>"+best+"%</b> "+(best===100?"👑":best>=70?"❤️":"🔁")+(txt?heardHTML(txt,p):" – nichts gehört")}
+// 20261111:1000 GEÄNDERT Funktion micTest(): Testsatz kommt von der portugiesischen Stimme, nicht von der deutschen
+async function micTest(){const t=LANG.testPhrase;panel("🎤 Sag nach dem Ton: <b>"+t.pt+"</b> ("+t.ip+")",true);
+await de("Sag nach dem Ton:");await tl(t.pt);
+await beep();await wait(0.3);const r=await listen(t);await beep(440,0.15);
+if(r.best<0){panel("Spracherkennung nur in Chrome.");return}
+if(r.err){panel("⚠ "+ERR[r.err]);await de(ERR[r.err]);return}
+panel(r.txt?"✅ Mikrofon funktioniert."+heardHTML(r.txt,t):"🔇 Nichts gehört – Mikrofon prüfen.");await de(r.txt?"Das Mikrofon funktioniert.":"Ich habe nichts gehört.")}
+async function toggleGuide(){const b=document.getElementById("guide");
+if(running){running=false;speechSynthesis.cancel();if(stopListen)stopListen();b.textContent="▶ Kapitel geführt üben";b.className="";panel("Gestoppt.");return}
+running=true;b.textContent="■ Stopp";b.className="run";
+const P=()=>Math.max(2,parseInt(document.getElementById("pause").value)||10),
+P2=()=>Math.max(1,parseInt(document.getElementById("pause2").value)||4),T=()=>parseInt(document.getElementById("thr").value)||70;
+const list=cur(),chName=CHAPTERS.find(c=>c.id===chap).name;
+await de("Kapitel "+chName+". "+list.length+" Sätze.");
+if(running)await de("Wir beginnen. Ich sage dir zuerst den deutschen Satz. Überleg kurz, dann kommt der portugiesische Satz. Nach dem hohen Ton sprichst du nach. Der tiefe Ton heißt: fertig.");
+for(let i=0;i<list.length&&running;i++){const p=list[i];mark(p.id);
+panel("Satz "+(i+1)+": 🇩🇪 "+esc(p.de));await de("Satz "+(i+1)+". "+p.de);if(!running)break;
+panel("🇩🇪 "+esc(p.de)+"<br>⏳ Überleg mal… ("+P()+" s)");await wait(P());if(!running)break;
+reveal(p.id,true);
+await de("Auf Portugiesisch:");await playTl(p,true);if(!running)break;
+await de("Gleich bist du dran.");panel("⏳ Gleich bist du dran… ("+P()+" s)");await wait(P());if(!running)break;
+let ok=false;
+for(let t=1;t<=MAX_TRIES&&running;t++){
+await de(t===1?"Sprich jetzt, nach dem Ton.":"Versuch "+t+". Sprich nach dem Ton.");if(!running)break;
+panel("🎙 SPRICH JETZT: <b>"+esc(p.pt)+"</b> ("+esc(p.ip)+") – Versuch "+t+"/"+MAX_TRIES,true);
+await beep();await wait(0.3);const {txt,best,err}=await listen(p);await beep(440,0.15);if(!running)break;
+if(best<0){panel("Spracherkennung nur in Chrome verfügbar.");await de("Die Spracherkennung funktioniert nur in Chrome.");running=false;break}
+if(err){panel("⚠ "+ERR[err]);await de(ERR[err]);running=false;break}
+if(best>=T()){panel("✅ "+best+"% "+(best===100?"👑":"❤️")+heardHTML(txt,p));
+await de(best===100?"Perfekt! Hundert Prozent.":"Gut gemacht! "+best+" Prozent.");ok=true;break}
+if(!txt){panel("🔇 Nichts gehört.");await de("Ich habe nichts gehört.")}
+else{panel("🔁 "+best+"%"+heardHTML(txt,p));await de("Noch nicht ganz. "+best+" Prozent.")}
+if(!running)break;
+if(t<MAX_TRIES){await de("Hör noch einmal zu.");await playTl(p,false);if(!running)break;
+panel("⏳ Kurze Pause… ("+P2()+" s)");await wait(P2())}
+else await de("Wir gehen weiter. Diesen Satz üben wir später nochmal.")}
+if(ok&&running){status[p.id]=status[p.id]==="LEARNED"?"LEARNED":"LEARNING";save()}
+if(running){panel("➡ Nächster Satz…");await wait(2)}}
+if(running)await de("Super, die Übung ist beendet.");
+const wasRun=running;running=false;b.textContent="▶ Kapitel geführt üben";b.className="";mark(null);if(wasRun)panel("Fertig! 🎉")}
+async function playTl(p,wordByWord){panel(LANG.flag+" <b>"+esc(p.pt)+"</b><br>"+esc(p.ip));await tl(p.pt);
+if(wordByWord&&p.w.length>1){await wait(0.6);if(running)await de("Wort für Wort:"); // 20261111:1000 bei Ein-Wort-Sätzen keine Wort-für-Wort-Runde
+for(const x of p.w){if(!running)return;panel(LANG.flag+" <b>"+esc(x[0])+"</b> "+esc(x[1])+" = "+esc(x[2]));await tl(x[0]);await de(x[2]);await wait(0.5)}
+if(running){await de("Noch einmal der ganze Satz:");panel(LANG.flag+" <b>"+esc(p.pt)+"</b><br>"+esc(p.ip));await tl(p.pt)}}
+else if(wordByWord&&running){await wait(0.4);await de(p.w[0][2])}}
+function mark(id){document.querySelectorAll(".card").forEach(c=>c.classList.toggle("active",c.dataset.id==id));const a=document.querySelector(".card.active");if(a)a.scrollIntoView({behavior:"smooth",block:"center"})}
+function save(){try{localStorage.setItem(LANG.key+"Status",JSON.stringify(status))}catch(e){}render()}
+function cycle(id){status[id]=CY[status[id]||"NONE"];save()}
+function renderTabs(){document.getElementById("tabs").innerHTML=CHAPTERS.map(c=>{const ps=phrases.filter(p=>p.ch===c.id),ok=ps.filter(p=>status[p.id]==="LEARNED").length;
+return `<button class="${c.id===chap?"on":""}" onclick="setChapter('${c.id}')">${c.name}<small>${ok}/${ps.length} gelernt</small></button>`}).join("");
+document.getElementById("chinfo").textContent=CHAPTERS.find(c=>c.id===chap).info}
+function setChapter(id){if(running)return;chap=id;try{localStorage.setItem(LANG.key+"Chap",id)}catch(e){}render();window.scrollTo({top:0})}
+function reveal(id,force){const open=force??!shown.has(id);open?shown.add(id):shown.delete(id);
+const c=document.querySelector('.card[data-id="'+id+'"]');if(!c)return;c.querySelector(".more").hidden=!open;c.querySelector(".hint").textContent=open?"zudecken":"antippen zum Aufdecken"}
+function render(){renderTabs();document.getElementById("list").innerHTML=cur().map((p,i)=>{const s=status[p.id]||"NONE",open=shown.has(p.id);return `
+<div class="card ${s}" data-id="${p.id}"><div class="q" onclick="reveal(${p.id})"><span>${i+1}. ${esc(p.de)}</span><span class="hint">${open?"zudecken":"antippen zum Aufdecken"}</span></div>
+<div class="more"${open?"":" hidden"}>
+<div class="tl" onclick="speakId(${p.id})">${esc(p.pt)}</div><div class="ip">${esc(p.ip)}</div>
+<div class="words">${p.w.map((x,k)=>`<div class="w" onclick="speakId(${p.id},${k})"><div class="c">${esc(x[0])}</div><div class="p">${esc(x[1])}</div><div class="g">${esc(x[2])}</div></div>`).join("")}</div>
+<button onclick="speakId(${p.id})">🔊 Anhören</button><button class="rec" onclick="record(${p.id})">🎙 Nachsprechen</button>
+<button class="st" onclick="cycle(${p.id})">${ST[s]}</button><div class="res" id="r${p.id}"></div></div></div>`}).join("")}
+render();
+</script></body></html>

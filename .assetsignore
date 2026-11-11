@@ -1,0 +1,12 @@
+# Dateien, die Cloudflare NICHT mit ausliefern soll.
+# (_headers wird von Cloudflare ausgewertet und gehoert nicht hierher.)
+
+# Die Git-Historie darf nie oeffentlich abrufbar sein.
+.git
+.gitignore
+.github
+
+wrangler.jsonc
+.assetsignore
+README.md
+node_modules
