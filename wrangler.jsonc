@@ -1,0 +1,17 @@
+{
+  // Auslieferung ueber Cloudflare als Worker mit statischen Assets
+  // (gleiches Muster wie HeikesNatur). Kein Build, kein Worker-Skript –
+  // die Dateien werden unveraendert ausgeliefert.
+  // Wird erst benutzt, wenn das Repository in Cloudflare verbunden ist
+  // (Workers & Pages -> Create -> Import a repository). Fuer GitHub Pages
+  // ist diese Datei ohne Bedeutung.
+  "name": "langlearn2026super",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./",
+    // Keine Single-Page-App: unbekannte Pfade nicht auf index.html umbiegen.
+    "not_found_handling": "none",
+    // /chinesisch und /portugiesisch-brasilien ohne Schraegstrich -> mit Schraegstrich
+    "html_handling": "auto-trailing-slash"
+  }
+}
