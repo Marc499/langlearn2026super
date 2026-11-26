@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<!-- italienisch/index.html (GitHub Pages) | 20261126:2200 NEU: Kopie von portugiesisch-brasilien/index.html
+     GEÄNDERT: Sprache it-IT, Feld it statt pt, Kapitel „Puccini: Un bel dì vedremo“ (Madama Butterfly) Satz für Satz,
+     Apostroph trennt Wörter beim Vergleich (sull'estremo = sull estremo), Sprechzeit wächst mit Satzlänge -->
+<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Italienisch lernen</title>
+<style>
+body{font-family:system-ui,Arial,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:20px}
+.wrap{max-width:720px;margin:auto}
+h1{margin:0 0 4px;color:#f8fafc}#voice{font-size:13px;margin-bottom:12px}
+.ok{color:#4ade80}.warn{color:#fbbf24}
+.card{background:#1e293b;border-radius:12px;padding:16px;margin:12px 0;border-left:6px solid #94a3b8}
+.card.LEARNING{border-color:#f59e0b}.card.LEARNED{border-color:#22c55e}.card.active{outline:3px solid #38bdf8}
+.tl{font-size:30px;margin:6px 0;cursor:pointer;color:#fde68a}.ip{font-size:18px;color:#38bdf8}
+.words{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}
+.w{background:#0f172a;border-radius:8px;padding:6px 10px;text-align:center;cursor:pointer}
+.w .c{font-size:20px}.w .p{font-size:13px;color:#38bdf8}.w .g{font-size:12px;color:#cbd5e1}
+button{background:#0369a1;color:#fff;border:0;border-radius:8px;padding:8px 12px;margin:4px 4px 0 0;cursor:pointer;font-size:14px}
+button.rec{background:#b91c1c}button.st{background:#475569}
+#guide{background:#16a34a;font-size:18px;padding:12px 18px}#guide.run{background:#b91c1c}
+#panel{background:#1e293b;border-radius:12px;padding:14px;margin:12px 0;font-size:18px;min-height:28px}
+#panel.mic{background:#7f1d1d}
+#bar{height:8px;background:#334155;border-radius:4px;margin-top:8px;overflow:hidden;display:none}
+#bar div{height:100%;background:#f87171;width:0%}
+#dbg{font-size:12px;color:#64748b;margin-top:6px}
+.res{margin-top:8px;font-size:15px}
+.cmp{display:grid;gap:6px;margin-top:8px}
+.cmp .lbl{font-size:12px;color:#94a3b8}
+.row{display:flex;flex-wrap:wrap;gap:4px}
+.wd{font-size:20px;padding:2px 6px;border-radius:6px;background:#0f172a}/* 20261111:1000 Wort statt Zeichen */
+.wd.bad{background:#7f1d1d;color:#fecaca}
+#tabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 4px}
+#tabs button{background:#1e293b;border:1px solid #334155;color:#cbd5e1;margin:0;display:flex;flex-direction:column;align-items:flex-start;padding:8px 12px}
+#tabs button small{font-size:11px;color:#64748b}
+#tabs button.on{background:#14532d;border-color:#4ade80;color:#fff}#tabs button.on small{color:#bbf7d0}
+#chinfo{font-size:13px;color:#94a3b8;margin:4px 0 0}
+.card .q{font-size:21px;color:#f8fafc;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.card .q .hint{font-size:12px;color:#64748b;white-space:nowrap}
+.card .more{margin-top:8px;border-top:1px solid #334155;padding-top:8px}
+details{font-size:13px;color:#94a3b8;margin:8px 0}details b{color:#e2e8f0}/* 20261111:1000 NEU Lesehilfe Aussprache */
+label{display:inline-block;margin:2px 14px 2px 0}
+</style></head><body><div class="wrap">
+<a href="../" style="color:#94a3b8;font-size:14px;text-decoration:none">← Alle Sprachen</a>
+<h1>🇮🇹 Italienisch</h1>
+<div id="voice">Stimmen werden gesucht…</div>
+<label>Tempo: <input type="range" id="rate" min="0.4" max="1.2" step="0.1" value="0.8"> <span id="rv">0.8</span></label>
+<label>Pause (s): <input type="number" id="pause" min="2" max="30" value="10" style="width:50px"></label>
+<label>Pause nach Versuch (s): <input type="number" id="pause2" min="1" max="15" value="4" style="width:50px"></label>
+<label>Sprechzeit (s): <input type="number" id="win" min="3" max="20" value="7" style="width:50px"></label>
+<label>Schwelle %: <input type="number" id="thr" min="30" max="100" value="70" style="width:55px"></label>
+<details><summary>So liest du die Aussprachehilfe</summary>
+<b>GROSS</b> = betonte Silbe · <b>tsch / dsch</b>: c und g vor e/i („ciao“, „giorno“) · <b>k / g</b>: ch und gh („chi“, „spaghetti“) ·
+<b>sch</b>: sc vor e/i („scendo“) · <b>lj</b>: gli wie in „Familie“ · <b>nj</b>: gn wie in „Champagner“ · <b>ts / dds</b>: z ·
+<b>s</b> zwischen Vokalen weich, sonst scharf · <b>Doppelkonsonanten</b> (tt, ll, pp) hörbar länger halten · <b>ä</b> = offenes e, r immer gerollt.
+</details>
+<div id="tabs"></div><div id="chinfo"></div>
+<div><button id="guide" onclick="toggleGuide()">▶ Kapitel geführt üben</button> <button class="st" onclick="micTest()">🎤 Mikrofon testen</button></div>
+<div id="panel">Wähle ein Kapitel und drücke „Kapitel geführt üben“. Alle Ansagen kommen gesprochen – du musst nichts lesen.</div>
+<div id="bar"><div></div></div>
+<div id="dbg"></div>
+<div id="list"></div></div>
+<script>
+// 20261126:2200 NEU Sprachobjekt Italienisch
+const LANG={
+code:"it-IT",            // Sprachausgabe + Spracherkennung
+key:"it",                // Präfix für localStorage (eigener Lernstand je Sprache)
+flag:"🇮🇹",name:"Italienisch",adj:"italienische",
+voiceOk:v=>/it[-_]IT/i.test(v.lang)||/Ital/i.test(v.name),   // passende Stimme
+voiceFallback:v=>/^it/i.test(v.lang),                         // notfalls irgendein Italienisch
+testPhrase:{it:"Ciao, come stai?",ip:"TSCHA-o, KO-me STA-i"}
+};
+const CHAPTERS=[
+{id:"basis",name:"Grundlagen",info:"Begrüßen, Danke, Bitte, Entschuldigung – das Wichtigste zuerst."},
+{id:"kennen",name:"Kennenlernen",info:"Sich vorstellen und einfache Fragen stellen. „tu“ ist du, „Lei“ ist Sie."},
+{id:"alltag",name:"Essen & Unterwegs",info:"In der Bar, im Restaurant, nach dem Weg fragen."},
+{id:"puccini",name:"Puccini: Un bel dì vedremo",info:"Madama Butterfly, 2. Akt. Cio-Cio-San malt ihrer Dienerin Suzuki aus, wie Pinkerton eines Tages zurückkommt. Satz für Satz, Italienisch – Deutsch. Libretto: Luigi Illica und Giuseppe Giacosa (1904). Die deutsche Übersetzung ist sinngemäß, nicht singbar."},
+{id:"spezial",name:"Spezialsätze",info:"Deine eigenen Sätze. Neue sagst du mir einfach, ich trage sie hier ein."}
+];
+// Sätze – hier neue ergänzen | 20261126:2200
+// Felder: id (fest, hängt am Lernstand) · ch Kapitel · de Deutsch · it Italienisch · ip Aussprachehilfe · w Wörter [Wort, Aussprache, Bedeutung]
+const phrases=[
+// --- Grundlagen
+{id:101,ch:"basis",de:"Hallo! (auch: Tschüss)",it:"Ciao!",ip:"TSCHA-o",w:[["ciao","TSCHA-o","hallo, tschüss"]]},
+{id:102,ch:"basis",de:"Guten Morgen, guten Tag.",it:"Buongiorno.",ip:"buon-DSCHOR-no",w:[["buongiorno","buon-DSCHOR-no","guten Tag"]]},
+{id:103,ch:"basis",de:"Guten Abend.",it:"Buonasera.",ip:"buo-na-SE-ra",w:[["buonasera","buo-na-SE-ra","guten Abend"]]},
+{id:104,ch:"basis",de:"Wie geht's?",it:"Come stai?",ip:"KO-me STA-i",w:[["come","KO-me","wie"],["stai","STA-i","geht es dir"]]},
+{id:105,ch:"basis",de:"Gut, danke.",it:"Bene, grazie.",ip:"BÄ-ne, GRA-tsje",w:[["bene","BÄ-ne","gut"],["grazie","GRA-tsje","danke"]]},
+{id:106,ch:"basis",de:"Vielen Dank.",it:"Grazie mille.",ip:"GRA-tsje MIL-le",w:[["grazie","GRA-tsje","danke"],["mille","MIL-le","tausend"]]},
+{id:107,ch:"basis",de:"Gern geschehen.",it:"Prego.",ip:"PRÄ-go",w:[["prego","PRÄ-go","bitte sehr"]]},
+{id:108,ch:"basis",de:"Bitte.",it:"Per favore.",ip:"per fa-VO-re",w:[["per","per","für"],["favore","fa-VO-re","Gefallen"]]},
+{id:109,ch:"basis",de:"Entschuldigung.",it:"Scusi.",ip:"SKU-si",w:[["scusi","SKU-si","entschuldigen Sie"]]},
+{id:110,ch:"basis",de:"Ich verstehe nicht.",it:"Non capisco.",ip:"non ka-PIS-ko",w:[["non","non","nicht"],["capisco","ka-PIS-ko","ich verstehe"]]},
+{id:111,ch:"basis",de:"Können Sie langsamer sprechen?",it:"Può parlare più lentamente?",ip:"PUO par-LA-re PJU len-ta-MEN-te",w:[["può","PUO","können Sie"],["parlare","par-LA-re","sprechen"],["più","PJU","mehr"],["lentamente","len-ta-MEN-te","langsam"]]},
+{id:112,ch:"basis",de:"Auf Wiedersehen.",it:"Arrivederci.",ip:"ar-ri-ve-DER-tschi",w:[["arrivederci","ar-ri-ve-DER-tschi","auf Wiedersehen"]]},
+{id:113,ch:"basis",de:"Bis später.",it:"A più tardi.",ip:"a PJU TAR-di",w:[["a","a","bis"],["più","PJU","mehr"],["tardi","TAR-di","spät"]]},
+// --- Kennenlernen
+{id:201,ch:"kennen",de:"Wie heißt du?",it:"Come ti chiami?",ip:"KO-me ti KJA-mi",w:[["come","KO-me","wie"],["ti","ti","dich"],["chiami","KJA-mi","nennst"]]},
+{id:202,ch:"kennen",de:"Ich heiße Marc.",it:"Mi chiamo Marc.",ip:"mi KJA-mo Marc",w:[["mi","mi","mich"],["chiamo","KJA-mo","nenne"],["Marc","Marc","Marc"]]},
+{id:203,ch:"kennen",de:"Freut mich!",it:"Piacere!",ip:"pja-TSCHE-re",w:[["piacere","pja-TSCHE-re","Vergnügen"]]},
+{id:204,ch:"kennen",de:"Ich bin Deutscher.",it:"Sono tedesco.",ip:"SO-no te-DES-ko",w:[["sono","SO-no","ich bin"],["tedesco","te-DES-ko","Deutscher"]]},
+{id:205,ch:"kennen",de:"Ich arbeite in Hamburg.",it:"Lavoro ad Amburgo.",ip:"la-VO-ro ad am-BUR-go",w:[["lavoro","la-VO-ro","ich arbeite"],["ad","ad","in"],["Amburgo","am-BUR-go","Hamburg"]]},
+{id:206,ch:"kennen",de:"Ich lerne Italienisch.",it:"Sto imparando l'italiano.",ip:"sto im-pa-RAN-do li-ta-LJA-no",w:[["sto","sto","ich bin (gerade)"],["imparando","im-pa-RAN-do","lernend"],["l'italiano","li-ta-LJA-no","das Italienische"]]},
+{id:207,ch:"kennen",de:"Woher kommst du?",it:"Di dove sei?",ip:"di DO-ve SÄ-i",w:[["di","di","von"],["dove","DO-ve","wo"],["sei","SÄ-i","bist du"]]},
+// --- Essen & Unterwegs
+{id:301,ch:"alltag",de:"Wie viel kostet das?",it:"Quanto costa?",ip:"KUAN-to KOS-ta",w:[["quanto","KUAN-to","wie viel"],["costa","KOS-ta","kostet"]]},
+{id:302,ch:"alltag",de:"Einen Kaffee, bitte.",it:"Un caffè, per favore.",ip:"un kaf-FÄ, per fa-VO-re",w:[["un","un","einen"],["caffè","kaf-FÄ","Kaffee (Espresso)"],["per favore","per fa-VO-re","bitte"]]},
+{id:303,ch:"alltag",de:"Ein Wasser, bitte.",it:"Un'acqua, per favore.",ip:"un-AK-kua, per fa-VO-re",w:[["un'acqua","un-AK-kua","ein Wasser"],["per favore","per fa-VO-re","bitte"]]},
+{id:304,ch:"alltag",de:"Das ist sehr lecker.",it:"È molto buono.",ip:"Ä MOL-to BUO-no",w:[["è","Ä","ist"],["molto","MOL-to","sehr"],["buono","BUO-no","gut, lecker"]]},
+{id:305,ch:"alltag",de:"Prost!",it:"Salute!",ip:"sa-LU-te",w:[["salute","sa-LU-te","Gesundheit"]]},
+{id:306,ch:"alltag",de:"Die Rechnung, bitte.",it:"Il conto, per favore.",ip:"il KON-to, per fa-VO-re",w:[["il","il","die/der"],["conto","KON-to","Rechnung"],["per favore","per fa-VO-re","bitte"]]},
+{id:307,ch:"alltag",de:"Wo ist die Toilette?",it:"Dov'è il bagno?",ip:"do-VÄ il BA-njo",w:[["dov'è","do-VÄ","wo ist"],["il","il","der/die"],["bagno","BA-njo","Bad, Toilette"]]},
+// --- Puccini, Madama Butterfly: „Un bel dì vedremo“ – Satz für Satz
+{id:501,ch:"puccini",de:"Eines schönen Tages werden wir einen Rauchfaden aufsteigen sehen, ganz draußen am Rand des Meeres.",it:"Un bel dì, vedremo levarsi un fil di fumo sull'estremo confin del mare.",ip:"un BÄL DI, ve-DRE-mo le-VAR-si un FIL di FU-mo sul-les-TRÄ-mo kon-FIN del MA-re",w:[["un bel dì","un BÄL DI","eines schönen Tages"],["vedremo","ve-DRE-mo","wir werden sehen"],["levarsi","le-VAR-si","sich erheben"],["un fil","un FIL","einen Faden"],["di fumo","di FU-mo","aus Rauch"],["sull'estremo","sul-les-TRÄ-mo","am äußersten"],["confin","kon-FIN","Rand, Grenze"],["del mare","del MA-re","des Meeres"]]},
+{id:502,ch:"puccini",de:"Und dann erscheint das Schiff.",it:"E poi la nave appare.",ip:"e POI la NA-ve ap-PA-re",w:[["e","e","und"],["poi","POI","dann"],["la nave","la NA-ve","das Schiff"],["appare","ap-PA-re","erscheint"]]},
+{id:503,ch:"puccini",de:"Dann läuft das weiße Schiff in den Hafen ein und donnert seinen Gruß.",it:"Poi la nave bianca entra nel porto, romba il suo saluto.",ip:"POI la NA-ve BJAN-ka EN-tra nel POR-to, ROM-ba il SU-o sa-LU-to",w:[["poi","POI","dann"],["la nave","la NA-ve","das Schiff"],["bianca","BJAN-ka","weiß"],["entra","EN-tra","fährt ein"],["nel porto","nel POR-to","in den Hafen"],["romba","ROM-ba","donnert, dröhnt"],["il suo saluto","il SU-o sa-LU-to","seinen Gruß"]]},
+{id:504,ch:"puccini",de:"Siehst du? Er ist gekommen!",it:"Vedi? È venuto!",ip:"VE-di? Ä ve-NU-to",w:[["vedi","VE-di","siehst du"],["è","Ä","ist"],["venuto","ve-NU-to","gekommen"]]},
+{id:505,ch:"puccini",de:"Ich gehe ihm nicht entgegen. Ich nicht.",it:"Io non gli scendo incontro. Io no.",ip:"I-o non lji SCHEN-do in-KON-tro. I-o NO",w:[["io","I-o","ich"],["non","non","nicht"],["gli","lji","ihm"],["scendo","SCHEN-do","ich steige hinab"],["incontro","in-KON-tro","entgegen"],["io no","I-o NO","ich nicht"]]},
+{id:506,ch:"puccini",de:"Ich stelle mich dort oben an den Rand des Hügels und warte, und warte lange, und das lange Warten fällt mir nicht schwer.",it:"Mi metto là sul ciglio del colle e aspetto, e aspetto gran tempo e non mi pesa la lunga attesa.",ip:"mi MET-to LA sul TSCHI-ljo del KOL-le e as-PÄT-to, e as-PÄT-to gran TÄM-po e non mi PE-sa la LUN-ga at-TE-sa",w:[["mi metto","mi MET-to","ich stelle mich"],["là","LA","dort"],["sul ciglio","sul TSCHI-ljo","an den Rand"],["del colle","del KOL-le","des Hügels"],["e aspetto","e as-PÄT-to","und warte"],["gran tempo","gran TÄM-po","lange Zeit"],["non mi pesa","non mi PE-sa","fällt mir nicht schwer"],["la lunga attesa","la LUN-ga at-TE-sa","das lange Warten"]]},
+{id:507,ch:"puccini",de:"Und aus der Menge der Stadt tritt ein Mann hervor, ein winziger Punkt, und macht sich auf den Weg den Hügel hinauf.",it:"E uscito dalla folla cittadina, un uomo, un picciol punto s'avvia per la collina.",ip:"e u-SCHI-to DAL-la FOL-la tschit-ta-DI-na, un UO-mo, un PIT-tschol PUN-to sav-VI-a per la kol-LI-na",w:[["e uscito","e u-SCHI-to","und herausgekommen"],["dalla folla","DAL-la FOL-la","aus der Menge"],["cittadina","tschit-ta-DI-na","der Stadt"],["un uomo","un UO-mo","ein Mann"],["un picciol punto","un PIT-tschol PUN-to","ein winziger Punkt"],["s'avvia","sav-VI-a","macht sich auf den Weg"],["per la collina","per la kol-LI-na","den Hügel hinauf"]]},
+{id:508,ch:"puccini",de:"Wer mag das sein? Wer mag das sein?",it:"Chi sarà? Chi sarà?",ip:"KI sa-RA? KI sa-RA?",w:[["chi","KI","wer"],["sarà","sa-RA","wird sein"]]},
+{id:509,ch:"puccini",de:"Und wenn er angekommen ist, was wird er sagen? Was wird er sagen?",it:"E come sarà giunto, che dirà? Che dirà?",ip:"e KO-me sa-RA DSCHUN-to, KE di-RA? KE di-RA?",w:[["e come","e KO-me","und sobald"],["sarà giunto","sa-RA DSCHUN-to","er angekommen ist"],["che","KE","was"],["dirà","di-RA","wird er sagen"]]},
+{id:510,ch:"puccini",de:"Von weitem wird er „Butterfly“ rufen.",it:"Chiamerà Butterfly dalla lontana.",ip:"kja-me-RA BAT-ter-flai DAL-la lon-TA-na",w:[["chiamerà","kja-me-RA","er wird rufen"],["Butterfly","BAT-ter-flai","Schmetterling (ihr Name)"],["dalla lontana","DAL-la lon-TA-na","von weitem"]]},
+{id:511,ch:"puccini",de:"Ich gebe keine Antwort und bleibe versteckt, halb zum Scherz und halb, um beim ersten Wiedersehen nicht zu sterben;",it:"Io senza dar risposta me ne starò nascosta, un po' per celia e un po' per non morire al primo incontro;",ip:"I-o SÄN-tsa dar ris-POS-ta me ne sta-RO nas-KOS-ta, un PO per TSCHÄ-lja e un PO per non mo-RI-re al PRI-mo in-KON-tro",w:[["io","I-o","ich"],["senza dar risposta","SÄN-tsa dar ris-POS-ta","ohne Antwort zu geben"],["me ne starò","me ne sta-RO","ich werde bleiben"],["nascosta","nas-KOS-ta","versteckt"],["un po' per celia","un PO per TSCHÄ-lja","ein bisschen zum Scherz"],["e un po'","e un PO","und ein bisschen"],["per non morire","per non mo-RI-re","um nicht zu sterben"],["al primo incontro","al PRI-mo in-KON-tro","beim ersten Wiedersehen"]]},
+{id:512,ch:"puccini",de:"und er, schon etwas besorgt, wird rufen, rufen:",it:"ed egli alquanto in pena chiamerà, chiamerà:",ip:"ed E-lji al-KUAN-to in PE-na kja-me-RA, kja-me-RA",w:[["ed","ed","und"],["egli","E-lji","er"],["alquanto","al-KUAN-to","ziemlich, etwas"],["in pena","in PE-na","in Sorge"],["chiamerà","kja-me-RA","wird rufen"]]},
+{id:513,ch:"puccini",de:"„Kleines Frauchen, Duft von Eisenkraut“,",it:"Piccina mogliettina, olezzo di verbena,",ip:"pit-TSCHI-na mo-ljet-TI-na, o-LED-dso di ver-BE-na",w:[["piccina","pit-TSCHI-na","Kleine"],["mogliettina","mo-ljet-TI-na","Ehefrauchen"],["olezzo","o-LED-dso","Duft"],["di verbena","di ver-BE-na","von Eisenkraut (Verbene)"]]},
+{id:514,ch:"puccini",de:"die Namen, die er mir gab, als er damals kam.",it:"i nomi che mi dava al suo venire.",ip:"i NO-mi ke mi DA-va al SU-o ve-NI-re",w:[["i nomi","i NO-mi","die Namen"],["che","ke","die"],["mi dava","mi DA-va","er mir gab"],["al suo venire","al SU-o ve-NI-re","bei seinem Kommen"]]},
+{id:515,ch:"puccini",de:"(zu Suzuki) All das wird geschehen, das verspreche ich dir.",it:"Tutto questo avverrà, te lo prometto.",ip:"TUT-to KUES-to av-ver-RA, te lo pro-MET-to",w:[["tutto questo","TUT-to KUES-to","all das"],["avverrà","av-ver-RA","wird geschehen"],["te lo prometto","te lo pro-MET-to","ich verspreche es dir"]]},
+{id:516,ch:"puccini",de:"Behalte deine Angst für dich – ich erwarte ihn in festem Vertrauen.",it:"Tienti la tua paura, io con sicura fede l'aspetto.",ip:"TJÄN-ti la TU-a pa-U-ra, I-o kon si-KU-ra FE-de las-PÄT-to",w:[["tienti","TJÄN-ti","behalte (für dich)"],["la tua paura","la TU-a pa-U-ra","deine Angst"],["io","I-o","ich"],["con sicura fede","kon si-KU-ra FE-de","mit festem Glauben"],["l'aspetto","las-PÄT-to","erwarte ihn"]]},
+// --- Spezialsätze
+{id:401,ch:"spezial",de:"Ich bin sehr glücklich.",it:"Sono molto felice.",ip:"SO-no MOL-to fe-LI-tsche",w:[["sono","SO-no","ich bin"],["molto","MOL-to","sehr"],["felice","fe-LI-tsche","glücklich"]]},
+{id:402,ch:"spezial",de:"Vielen Dank für die Gastfreundschaft.",it:"Grazie mille per l'ospitalità.",ip:"GRA-tsje MIL-le per los-pi-ta-li-TA",w:[["grazie mille","GRA-tsje MIL-le","vielen Dank"],["per","per","für"],["l'ospitalità","los-pi-ta-li-TA","die Gastfreundschaft"]]}
+];
+const MAX_TRIES=3;
+const ST={NONE:"Noch zu lernen",LEARNING:"Lernen",LEARNED:"Gelernt"},CY={NONE:"LEARNING",LEARNING:"LEARNED",LEARNED:"NONE"};
+let status={};try{status=JSON.parse(localStorage.getItem(LANG.key+"Status")||"{}")}catch(e){}
+let tlVoice=null,deVoice=null,running=false,curRec=null,actx=null,stopListen=null;
+let chap="basis";try{const c=localStorage.getItem(LANG.key+"Chap");if(CHAPTERS.some(x=>x.id===c))chap=c}catch(e){}
+const shown=new Set();
+const cur=()=>phrases.filter(p=>p.ch===chap);
+const byId=id=>phrases.find(x=>x.id===id);
+// 20261111:1000 GEÄNDERT Funktion findVoice(): zuerst it-IT-Stimme, sonst irgendein Italienisch mit Warnung
+function findVoice(){const all=speechSynthesis.getVoices();
+const ok=all.filter(LANG.voiceOk),fb=all.filter(LANG.voiceFallback);
+tlVoice=ok.find(x=>/Google/.test(x.name))||ok[0]||fb[0]||null;
+const de=all.filter(x=>/^de/i.test(x.lang));deVoice=de.find(x=>/Google/.test(x.name))||de[0]||null;
+const el=document.getElementById("voice"),exact=tlVoice&&ok.includes(tlVoice);el.className=exact?"ok":"warn";
+el.textContent=(exact?"✓ "+LANG.name+": "+tlVoice.name:tlVoice?"⚠ Nur "+tlVoice.name+" ("+tlVoice.lang+") – passt nicht genau":"⚠ Keine italienische Stimme – bitte Chrome nutzen")+" | "+(deVoice?"✓ Deutsch: "+deVoice.name:"⚠ Keine deutsche Stimme")}
+speechSynthesis.onvoiceschanged=findVoice;setTimeout(findVoice,500);
+const rate=document.getElementById("rate");rate.oninput=()=>document.getElementById("rv").textContent=rate.value;
+function say(t,lang){return new Promise(res=>{const u=new SpeechSynthesisUtterance(t);u.lang=lang;
+u.rate=lang==="de-DE"?1.0:parseFloat(rate.value);const v=lang==="de-DE"?deVoice:tlVoice;if(v)u.voice=v;
+u.onend=res;u.onerror=res;speechSynthesis.speak(u)})}
+const de=t=>say(t,"de-DE");
+const tl=t=>say(t,LANG.code);
+function speak(t){speechSynthesis.cancel();tl(t)}
+function speakId(id,wi){const p=byId(id);if(p)speak(wi==null?p.it:p.w[wi][0])} // 20261111:1000 NEU: kein Text im onclick (Apostrophe)
+const wait=s=>new Promise(r=>setTimeout(r,s*1000));
+function beep(f=880,d=0.25){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();
+o.frequency.value=f;o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(0.25,actx.currentTime);o.start();o.stop(actx.currentTime+d)}catch(e){}return wait(d+0.15)}
+function panel(h,mic){const p=document.getElementById("panel");p.innerHTML=h;p.className=mic?"mic":""}
+function dbg(t){document.getElementById("dbg").textContent=t}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// 20261111:1000 GEÄNDERT Funktion norm()/words()/score(): Wörter vergleichen, Akzente und Satzzeichen egal
+const norm=s=>s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9\s-]/g," ").trim();
+const words=s=>norm(s).split(/[\s-]+/).filter(Boolean);
+function score(heard,target){const a=words(heard),b=words(target);if(!b.length)return 0;const pool=[...a];let hit=0;
+for(const w of b){const i=pool.indexOf(w);if(i>=0){hit++;pool.splice(i,1)}}return Math.round(hit/b.length*100)}
+// 20261111:1000 GEÄNDERT Funktion rowHTML(): Originalwörter zeigen, rot wenn im anderen Satz nicht vorhanden
+function rowHTML(t,other){const o=words(other);return '<div class="row">'+t.trim().split(/\s+/).filter(Boolean).map(x=>{const n=words(x);
+return '<span class="wd'+(n.every(k=>o.includes(k))?'':' bad')+'">'+esc(x)+'</span>'}).join('')+'</div>'}
+function heardHTML(txt,p){if(!txt)return "";
+return '<div class="cmp"><div class="lbl">Du hast gesagt (rot = passt nicht):</div>'+rowHTML(txt,p.it)+
+'<div class="lbl">Richtig wäre (rot = fehlte bei dir):</div>'+rowHTML(p.it,txt)+'</div>'}
+const ERR={"not-allowed":"Das Mikrofon ist blockiert. Bitte links neben der Adresse auf das Symbol tippen, dann Berechtigungen, und das Mikrofon erlauben.",
+"service-not-allowed":"Die Spracherkennung ist blockiert. Bitte die Seite in Chrome öffnen und das Mikrofon erlauben.",
+"audio-capture":"Es wurde kein Mikrofon gefunden.","network":"Die Spracherkennung braucht eine Internetverbindung.",
+"language-not-supported":"Die Spracherkennung kann kein Italienisch. Bitte Chrome nutzen."}; // 20261111:1000 NEU language-not-supported
+// Funktion listen(): festes Sprechfenster, Neustart bei vorzeitigem Ende, 1,5 s Stille nach Sprache -> fertig (wie Chinesisch)
+function listen(p){return new Promise(res=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR){res({txt:"",best:-1,err:"nosr"});return}
+const winS=Math.max(3,parseInt(document.getElementById("win").value)||7,Math.ceil(words(p.it).length*0.7)+2),t0=Date.now();
+let finals="",interim="",finished=false,fatal=null,silenceT=null,starts=0;
+const bar=document.getElementById("bar"),fill=bar.firstElementChild;bar.style.display="block";
+const tick=setInterval(()=>{fill.style.width=Math.min(100,(Date.now()-t0)/(winS*10))+"%"},100);
+const endT=setTimeout(()=>finish(),winS*1000);
+function finish(){if(finished)return;finished=true;clearInterval(tick);clearTimeout(endT);clearTimeout(silenceT);
+bar.style.display="none";fill.style.width="0%";stopListen=null;try{curRec&&curRec.abort()}catch(e){}
+const txt=(finals+" "+interim).replace(/\s+/g," ").trim();res({txt,best:txt?score(txt,p.it):0,err:fatal})} // 20261111:1000 Leerzeichen zwischen Teilergebnissen
+stopListen=finish;
+function start(){if(finished)return;starts++;const r=new SR();curRec=r;r.lang=LANG.code;r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
+r.onresult=e=>{interim="";for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)finals+=" "+t;else interim+=t}
+dbg("Höre: "+(finals+" "+interim).trim());clearTimeout(silenceT);silenceT=setTimeout(()=>finish(),1500)};
+r.onerror=e=>{dbg("Erkennung: "+e.error+" (Start "+starts+")");if(ERR[e.error]){fatal=e.error;finish()}};
+r.onend=()=>{if(finished)return;if(finals.trim()||interim){finish();return}
+if(Date.now()-t0<winS*1000-500)setTimeout(start,200);else finish()};
+try{r.start()}catch(e){dbg("Start-Fehler: "+e.message);setTimeout(start,300)}}
+start()})}
+async function record(id){const p=byId(id);const out=document.getElementById("r"+id);out.textContent="🎙 Sprich jetzt…";
+await beep();await wait(0.3);const {txt,best,err}=await listen(p);await beep(440,0.15);
+out.innerHTML=best<0?"Spracherkennung nur in Chrome.":err?ERR[err]:"Treffer: <b>"+best+"%</b> "+(best===100?"👑":best>=70?"❤️":"🔁")+(txt?heardHTML(txt,p):" – nichts gehört")}
+// 20261111:1000 GEÄNDERT Funktion micTest(): Testsatz kommt von der italienischen Stimme, nicht von der deutschen
+async function micTest(){const t=LANG.testPhrase;panel("🎤 Sag nach dem Ton: <b>"+t.it+"</b> ("+t.ip+")",true);
+await de("Sag nach dem Ton:");await tl(t.it);
+await beep();await wait(0.3);const r=await listen(t);await beep(440,0.15);
+if(r.best<0){panel("Spracherkennung nur in Chrome.");return}
+if(r.err){panel("⚠ "+ERR[r.err]);await de(ERR[r.err]);return}
+panel(r.txt?"✅ Mikrofon funktioniert."+heardHTML(r.txt,t):"🔇 Nichts gehört – Mikrofon prüfen.");await de(r.txt?"Das Mikrofon funktioniert.":"Ich habe nichts gehört.")}
+async function toggleGuide(){const b=document.getElementById("guide");
+if(running){running=false;speechSynthesis.cancel();if(stopListen)stopListen();b.textContent="▶ Kapitel geführt üben";b.className="";panel("Gestoppt.");return}
+running=true;b.textContent="■ Stopp";b.className="run";
+const P=()=>Math.max(2,parseInt(document.getElementById("pause").value)||10),
+P2=()=>Math.max(1,parseInt(document.getElementById("pause2").value)||4),T=()=>parseInt(document.getElementById("thr").value)||70;
+const list=cur(),chName=CHAPTERS.find(c=>c.id===chap).name;
+await de("Kapitel "+chName+". "+list.length+" Sätze.");
+if(running)await de("Wir beginnen. Ich sage dir zuerst den deutschen Satz. Überleg kurz, dann kommt der italienische Satz. Nach dem hohen Ton sprichst du nach. Der tiefe Ton heißt: fertig.");
+for(let i=0;i<list.length&&running;i++){const p=list[i];mark(p.id);
+panel("Satz "+(i+1)+": 🇩🇪 "+esc(p.de));await de("Satz "+(i+1)+". "+p.de);if(!running)break;
+panel("🇩🇪 "+esc(p.de)+"<br>⏳ Überleg mal… ("+P()+" s)");await wait(P());if(!running)break;
+reveal(p.id,true);
+await de("Auf "+LANG.name+":");await playTl(p,true);if(!running)break;
+await de("Gleich bist du dran.");panel("⏳ Gleich bist du dran… ("+P()+" s)");await wait(P());if(!running)break;
+let ok=false;
+for(let t=1;t<=MAX_TRIES&&running;t++){
+await de(t===1?"Sprich jetzt, nach dem Ton.":"Versuch "+t+". Sprich nach dem Ton.");if(!running)break;
+panel("🎙 SPRICH JETZT: <b>"+esc(p.it)+"</b> ("+esc(p.ip)+") – Versuch "+t+"/"+MAX_TRIES,true);
+await beep();await wait(0.3);const {txt,best,err}=await listen(p);await beep(440,0.15);if(!running)break;
+if(best<0){panel("Spracherkennung nur in Chrome verfügbar.");await de("Die Spracherkennung funktioniert nur in Chrome.");running=false;break}
+if(err){panel("⚠ "+ERR[err]);await de(ERR[err]);running=false;break}
+if(best>=T()){panel("✅ "+best+"% "+(best===100?"👑":"❤️")+heardHTML(txt,p));
+await de(best===100?"Perfekt! Hundert Prozent.":"Gut gemacht! "+best+" Prozent.");ok=true;break}
+if(!txt){panel("🔇 Nichts gehört.");await de("Ich habe nichts gehört.")}
+else{panel("🔁 "+best+"%"+heardHTML(txt,p));await de("Noch nicht ganz. "+best+" Prozent.")}
+if(!running)break;
+if(t<MAX_TRIES){await de("Hör noch einmal zu.");await playTl(p,false);if(!running)break;
+panel("⏳ Kurze Pause… ("+P2()+" s)");await wait(P2())}
+else await de("Wir gehen weiter. Diesen Satz üben wir später nochmal.")}
+if(ok&&running){status[p.id]=status[p.id]==="LEARNED"?"LEARNED":"LEARNING";save()}
+if(running){panel("➡ Nächster Satz…");await wait(2)}}
+if(running)await de("Super, die Übung ist beendet.");
+const wasRun=running;running=false;b.textContent="▶ Kapitel geführt üben";b.className="";mark(null);if(wasRun)panel("Fertig! 🎉")}
+async function playTl(p,wordByWord){panel(LANG.flag+" <b>"+esc(p.it)+"</b><br>"+esc(p.ip));await tl(p.it);
+if(wordByWord&&p.w.length>1){await wait(0.6);if(running)await de("Wort für Wort:"); // 20261111:1000 bei Ein-Wort-Sätzen keine Wort-für-Wort-Runde
+for(const x of p.w){if(!running)return;panel(LANG.flag+" <b>"+esc(x[0])+"</b> "+esc(x[1])+" = "+esc(x[2]));await tl(x[0]);await de(x[2]);await wait(0.5)}
+if(running){await de("Noch einmal der ganze Satz:");panel(LANG.flag+" <b>"+esc(p.it)+"</b><br>"+esc(p.ip));await tl(p.it)}}
+else if(wordByWord&&running){await wait(0.4);await de(p.w[0][2])}}
+function mark(id){document.querySelectorAll(".card").forEach(c=>c.classList.toggle("active",c.dataset.id==id));const a=document.querySelector(".card.active");if(a)a.scrollIntoView({behavior:"smooth",block:"center"})}
+function save(){try{localStorage.setItem(LANG.key+"Status",JSON.stringify(status))}catch(e){}render()}
+function cycle(id){status[id]=CY[status[id]||"NONE"];save()}
+function renderTabs(){document.getElementById("tabs").innerHTML=CHAPTERS.map(c=>{const ps=phrases.filter(p=>p.ch===c.id),ok=ps.filter(p=>status[p.id]==="LEARNED").length;
+return `<button class="${c.id===chap?"on":""}" onclick="setChapter('${c.id}')">${c.name}<small>${ok}/${ps.length} gelernt</small></button>`}).join("");
+document.getElementById("chinfo").textContent=CHAPTERS.find(c=>c.id===chap).info}
+function setChapter(id){if(running)return;chap=id;try{localStorage.setItem(LANG.key+"Chap",id)}catch(e){}render();window.scrollTo({top:0})}
+function reveal(id,force){const open=force??!shown.has(id);open?shown.add(id):shown.delete(id);
+const c=document.querySelector('.card[data-id="'+id+'"]');if(!c)return;c.querySelector(".more").hidden=!open;c.querySelector(".hint").textContent=open?"zudecken":"antippen zum Aufdecken"}
+function render(){renderTabs();document.getElementById("list").innerHTML=cur().map((p,i)=>{const s=status[p.id]||"NONE",open=shown.has(p.id);return `
+<div class="card ${s}" data-id="${p.id}"><div class="q" onclick="reveal(${p.id})"><span>${i+1}. ${esc(p.de)}</span><span class="hint">${open?"zudecken":"antippen zum Aufdecken"}</span></div>
+<div class="more"${open?"":" hidden"}>
+<div class="tl" onclick="speakId(${p.id})">${esc(p.it)}</div><div class="ip">${esc(p.ip)}</div>
+<div class="words">${p.w.map((x,k)=>`<div class="w" onclick="speakId(${p.id},${k})"><div class="c">${esc(x[0])}</div><div class="p">${esc(x[1])}</div><div class="g">${esc(x[2])}</div></div>`).join("")}</div>
+<button onclick="speakId(${p.id})">🔊 Anhören</button><button class="rec" onclick="record(${p.id})">🎙 Nachsprechen</button>
+<button class="st" onclick="cycle(${p.id})">${ST[s]}</button><div class="res" id="r${p.id}"></div></div></div>`}).join("")}
+render();
+</script></body></html>
