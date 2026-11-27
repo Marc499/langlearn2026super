@@ -10,6 +10,7 @@ Sprachtrainer als eigene Unterordner, jeweils eine einzelne `index.html` mit gef
 | `chinesisch/` | Mandarin | fertig |
 | `portugiesisch-brasilien/` | Portugiesisch (Brasilien, pt-BR) | fertig |
 | `italienisch/` | Italienisch (it-IT), mit Kapitel Puccini „Un bel dì vedremo“ Satz für Satz | fertig |
+| `russisch/` | Russisch (ru-RU), mit Kapitel Gedicht „Чудить“ Zeile für Zeile, Knopf „Nur anhören“ | fertig |
 | `portugiesisch-portugal/` | Portugiesisch (Portugal, pt-PT) | geplant |
 | `thai/` | Thai | geplant |
 
@@ -26,6 +27,7 @@ Neue Sprache: `portugiesisch-brasilien/index.html` kopieren und dort nur das Obj
 - `https://marc499.github.io/langlearn2026super/chinesisch/`
 - `https://marc499.github.io/langlearn2026super/portugiesisch-brasilien/`
 - `https://marc499.github.io/langlearn2026super/italienisch/`
+- `https://marc499.github.io/langlearn2026super/russisch/`
 
 GitHub Pages geht im kostenlosen Konto nur mit **öffentlichem** Repository.
 
